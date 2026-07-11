@@ -95,244 +95,224 @@ export default async function DashboardHomePage() {
   const recentJobs = dbUser?.jobTargets ?? [];
 
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8">
+    <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
 
-      {/* Hero Greeting */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            {getHourGreeting()}, {userName} 👋
-          </h1>
-          <p className="text-muted-foreground mt-1 text-sm md:text-base">
+      {/* TOP AREA: Hero & Status */}
+      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
+        <div className="space-y-2">
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl font-bold tracking-tight text-foreground">
+              {getHourGreeting()}, {userName}
+            </h1>
+            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 bg-green-500/10 border border-green-500/20 rounded-full text-xs font-semibold text-green-600 uppercase tracking-wide">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+              </span>
+              AI Core Online
+            </div>
+          </div>
+          <p className="text-muted-foreground max-w-2xl text-balance">
             {hasProfile
-              ? `Your profile is ${completenessScore}% complete. Keep building your career.`
-              : "Welcome to CareerOS. Let's build your career profile."}
+              ? `You are preparing for Software Engineering roles. Your profile is ${completenessScore}% complete.`
+              : "Welcome to your new Career Operating System. Let's build your verified profile."}
           </p>
         </div>
-        <div className="flex items-center gap-3 text-sm">
-          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-50 border border-orange-200 rounded-full font-medium text-orange-700">
-            <FlameKindling className="w-4 h-4" />
-            {streak > 0 ? `${streak}-day streak` : 'Start your streak'}
+        
+        <div className="flex items-center gap-4 flex-wrap">
+          <div className="flex flex-col items-end">
+            <span className="text-xs text-muted-foreground uppercase tracking-wider font-bold mb-1">Current Streak</span>
+            <div className={`flex items-center gap-2 ${streak > 0 ? 'text-orange-500' : 'text-muted-foreground'}`}>
+              <FlameKindling className="w-5 h-5" />
+              <span className="text-xl font-bold">{streak}</span>
+            </div>
           </div>
-          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-yellow-50 border border-yellow-200 rounded-full font-medium text-yellow-700">
-            <Zap className="w-4 h-4" />
-            Level {level} · {xp.toLocaleString()} XP
+          <div className="w-px h-10 bg-border hidden sm:block" />
+          <div className="flex flex-col items-end">
+            <span className="text-xs text-muted-foreground uppercase tracking-wider font-bold mb-1">Career Level</span>
+            <div className="flex items-center gap-2 text-yellow-500">
+              <Zap className="w-5 h-5" />
+              <span className="text-xl font-bold">{level}</span>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Main Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-        {/* Left: Career Readiness + Quick Actions */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 xl:gap-8">
+        
+        {/* LEFT COLUMN (2/3 width on LG) */}
         <div className="lg:col-span-2 space-y-6">
+          
+          {/* PRIMARY ACTION: Next Best Action */}
+          <div className="bg-gradient-to-br from-primary to-primary/90 text-primary-foreground rounded-3xl p-6 sm:p-8 premium-shadow relative overflow-hidden">
+            <div className="absolute top-0 right-0 -mt-16 -mr-16 w-64 h-64 bg-white/10 blur-3xl rounded-full pointer-events-none" />
+            <div className="relative z-10">
+              <div className="flex items-center gap-2 text-primary-foreground/80 font-semibold uppercase tracking-widest text-xs mb-4">
+                <Target className="w-4 h-4" />
+                <span>Next Best Action</span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-bold mb-2 text-balance">
+                Complete your DBMS baseline assessment.
+              </h2>
+              <p className="text-primary-foreground/80 mb-8 max-w-lg">
+                Your Job Intelligence scans show DBMS as a highly requested skill for your target roles, but you have no verified evidence yet.
+              </p>
+              <div className="flex flex-wrap items-center gap-4">
+                <Link href="/dashboard/assess">
+                  <Button variant="secondary" size="lg" className="rounded-xl font-bold shadow-lg">
+                    Start Assessment
+                  </Button>
+                </Link>
+                <Button variant="ghost" size="lg" className="rounded-xl text-primary-foreground hover:bg-white/20 hover:text-white">
+                  Dismiss
+                </Button>
+              </div>
+            </div>
+          </div>
 
-          {/* Career Readiness Card */}
-          <div className="bg-card border rounded-2xl p-6 shadow-sm space-y-5">
-            <div className="flex items-center justify-between">
-              <h2 className="font-semibold text-lg">Career Readiness</h2>
-              <Link href="/dashboard/analytics" className="text-sm text-primary flex items-center gap-1 hover:underline">
-                Full Report <ArrowRight className="w-3.5 h-3.5" />
+          {/* PROGRESS: Career Readiness (Reimagined) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="bg-card border border-border/50 rounded-3xl p-6 shadow-sm hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-bold text-sm text-muted-foreground uppercase tracking-wider">Career Readiness</h3>
+                <TrendingUp className="w-4 h-4 text-success" />
+              </div>
+              <div className="flex items-end gap-3 mb-4">
+                <span className="text-4xl font-black">{completenessScore}</span>
+                <span className="text-muted-foreground pb-1">/ 100</span>
+              </div>
+              <div className="space-y-3">
+                <ReadinessBar score={Math.min(100, skillCount * 10)} label="Verified Skills" />
+                <ReadinessBar score={Math.min(100, expCount * 25)} label="Experience Coverage" />
+              </div>
+            </div>
+
+            <div className="bg-card border border-border/50 rounded-3xl p-6 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="font-bold text-sm text-muted-foreground uppercase tracking-wider">Recent Achievement</h3>
+                  <Trophy className="w-4 h-4 text-yellow-500" />
+                </div>
+                {dbUser?.userBadges && dbUser.userBadges.length > 0 ? (
+                  <div className="mt-4">
+                    <div className="w-12 h-12 rounded-xl bg-yellow-500/10 flex items-center justify-center mb-3 border border-yellow-500/20">
+                      <Trophy className="w-6 h-6 text-yellow-500" />
+                    </div>
+                    <div className="font-bold text-lg">{dbUser.userBadges[0].badge.name}</div>
+                    <div className="text-sm text-muted-foreground mt-1">Earned recently. Keep pushing!</div>
+                  </div>
+                ) : (
+                  <div className="mt-4 flex flex-col items-center justify-center text-center py-4 bg-muted/30 rounded-2xl border border-dashed border-border">
+                    <Trophy className="w-8 h-8 text-muted-foreground/30 mb-2" />
+                    <div className="text-sm font-medium text-muted-foreground">No achievements yet</div>
+                    <div className="text-xs text-muted-foreground/70 mt-1">Complete tasks to earn badges</div>
+                  </div>
+                )}
+              </div>
+              <Link href="/dashboard/achievements">
+                <Button variant="outline" className="w-full mt-4 rounded-xl">
+                  View Career Passport
+                </Button>
               </Link>
             </div>
+          </div>
+          
+          {/* Quick Tools (replaces old generic boxes) */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <Link href="/dashboard/resumes" className="flex flex-col items-center justify-center gap-3 p-4 bg-card border border-border/50 rounded-2xl hover:bg-accent hover:border-border transition-all group">
+              <div className="w-10 h-10 rounded-full bg-primary/5 flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                <FileText className="w-5 h-5" />
+              </div>
+              <span className="text-sm font-semibold">Resume Studio</span>
+            </Link>
+            <Link href="/dashboard/jobs" className="flex flex-col items-center justify-center gap-3 p-4 bg-card border border-border/50 rounded-2xl hover:bg-accent hover:border-border transition-all group">
+              <div className="w-10 h-10 rounded-full bg-primary/5 flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                <Briefcase className="w-5 h-5" />
+              </div>
+              <span className="text-sm font-semibold">Job Intel</span>
+            </Link>
+            <Link href="/dashboard/interview" className="flex flex-col items-center justify-center gap-3 p-4 bg-card border border-border/50 rounded-2xl hover:bg-accent hover:border-border transition-all group">
+              <div className="w-10 h-10 rounded-full bg-primary/5 flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                <Brain className="w-5 h-5" />
+              </div>
+              <span className="text-sm font-semibold">Mock Interview</span>
+            </Link>
+            <Link href="/dashboard/code" className="flex flex-col items-center justify-center gap-3 p-4 bg-card border border-border/50 rounded-2xl hover:bg-accent hover:border-border transition-all group">
+              <div className="w-10 h-10 rounded-full bg-primary/5 flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                <Code2 className="w-5 h-5" />
+              </div>
+              <span className="text-sm font-semibold">Coding Arena</span>
+            </Link>
+          </div>
+        </div>
 
-            {/* Big Score */}
-            <div className="flex items-center gap-6">
-              <div className="relative w-24 h-24 shrink-0">
-                <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
-                  <circle cx="18" cy="18" r="15.9155" fill="none" stroke="currentColor"
-                    className="text-muted/20" strokeWidth="3" />
-                  <circle cx="18" cy="18" r="15.9155" fill="none"
-                    stroke={completenessScore >= 80 ? '#22c55e' : completenessScore >= 60 ? '#f97316' : '#ef4444'}
-                    strokeWidth="3"
-                    strokeDasharray={`${(completenessScore / 100) * 100.53} 100.53`}
-                    strokeLinecap="round" />
-                </svg>
-                <div className="absolute inset-0 flex items-center justify-center text-2xl font-bold">
-                  {completenessScore}%
-                </div>
-              </div>
-              <div className="flex-1 space-y-3">
-                <ReadinessBar score={skillCount > 5 ? 80 : skillCount * 15} label="Technical Skills" />
-                <ReadinessBar score={expCount > 0 ? 75 : 0} label="Experience" />
-                <ReadinessBar score={projectCount > 1 ? 70 : projectCount * 35} label="Projects" />
-              </div>
+        {/* RIGHT COLUMN */}
+        <div className="space-y-6">
+          
+          {/* TODAY: Daily Missions */}
+          <div className="bg-card border border-border/50 rounded-3xl p-6 shadow-sm">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="font-bold text-sm text-muted-foreground uppercase tracking-wider">Today&apos;s Missions</h3>
+              <Clock className="w-4 h-4 text-muted-foreground" />
             </div>
+            <div className="space-y-4">
+              {missionTasks.map(task => (
+                <div key={task.id} className="flex items-start gap-3 group cursor-pointer">
+                  <div className={`mt-0.5 shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
+                    task.completed 
+                      ? 'bg-success border-success text-success-foreground' 
+                      : 'border-border group-hover:border-primary'
+                  }`}>
+                    {task.completed && <CheckCircle className="w-3 h-3" />}
+                  </div>
+                  <div className={`text-sm font-medium ${task.completed ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
+                    {task.label}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
 
-            {!hasProfile && (
-              <div className="mt-4 p-4 bg-primary/5 border border-primary/20 rounded-xl flex items-center justify-between">
-                <p className="text-sm text-muted-foreground">Build your Master Profile to unlock all features.</p>
-                <Link href="/onboarding">
-                  <Button size="sm" className="gap-1.5">
-                    <Plus className="w-3.5 h-3.5" /> Get Started
+          {/* OPPORTUNITIES: Active Targets */}
+          <div className="bg-card border border-border/50 rounded-3xl p-6 shadow-sm">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="font-bold text-sm text-muted-foreground uppercase tracking-wider">Opportunities</h3>
+              <Link href="/dashboard/jobs" className="text-xs font-bold text-primary hover:underline">View All</Link>
+            </div>
+            {recentJobs.length > 0 ? (
+              <div className="space-y-4">
+                {recentJobs.map(job => (
+                  <div key={job.id} className="group border border-border/50 rounded-2xl p-4 hover:border-primary/50 transition-colors cursor-pointer">
+                    <div className="font-semibold text-sm mb-1">{job.roleTitle}</div>
+                    <div className="text-xs text-muted-foreground mb-3">{job.company}</div>
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-primary rounded-full"
+                          style={{ width: `${job.matchAnalysis?.overallScore ?? 0}%` }}
+                        />
+                      </div>
+                      <span className="text-xs font-bold w-8 text-right">{job.matchAnalysis?.overallScore ?? 0}%</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">
+                  <Target className="w-6 h-6 text-muted-foreground" />
+                </div>
+                <div className="text-sm font-medium">No active targets</div>
+                <div className="text-xs text-muted-foreground mt-1 mb-4">Start tracking a job to see it here</div>
+                <Link href="/dashboard/jobs">
+                  <Button variant="outline" size="sm" className="rounded-xl">
+                    Add Target
                   </Button>
                 </Link>
               </div>
             )}
           </div>
-
-          {/* Quick Action Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {[
-              { href: '/dashboard/jobs/new', icon: Briefcase, label: 'Analyze Job', color: 'text-blue-600 bg-blue-50 border-blue-200' },
-              { href: '/dashboard/resumes/new', icon: FileText, label: 'Create Resume', color: 'text-purple-600 bg-purple-50 border-purple-200' },
-              { href: '/dashboard/interview/new', icon: Brain, label: 'Mock Interview', color: 'text-green-600 bg-green-50 border-green-200' },
-              { href: '/dashboard/code', icon: Code2, label: 'Code Practice', color: 'text-orange-600 bg-orange-50 border-orange-200' },
-            ].map(action => (
-              <Link
-                key={action.href}
-                href={action.href}
-                className="flex flex-col items-center gap-2 p-4 bg-card border rounded-xl hover:shadow-md transition-all hover:-translate-y-0.5 text-center group"
-              >
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center border ${action.color}`}>
-                  <action.icon className="w-5 h-5" />
-                </div>
-                <span className="text-xs font-medium">{action.label}</span>
-              </Link>
-            ))}
-          </div>
-
-          {/* Recent Job Targets */}
-          {recentJobs.length > 0 && (
-            <div className="bg-card border rounded-2xl p-6 shadow-sm space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="font-semibold">Recent Job Analyses</h2>
-                <Link href="/dashboard/jobs" className="text-sm text-primary flex items-center gap-1 hover:underline">
-                  View All <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
-              </div>
-              <div className="space-y-3">
-                {recentJobs.map(job => {
-                  const score = job.matchAnalysis?.overallScore;
-                  return (
-                    <Link
-                      key={job.id}
-                      href={`/dashboard/jobs/${job.id}`}
-                      className="flex items-center gap-3 p-3 rounded-xl border hover:border-primary/40 hover:bg-muted/20 transition-all group"
-                    >
-                      <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                        <Briefcase className="w-4 h-4 text-primary" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium text-sm truncate">{job.roleTitle}</div>
-                        <div className="text-xs text-muted-foreground">{job.company}</div>
-                      </div>
-                      {score != null && (
-                        <span className={`text-sm font-bold ${score >= 80 ? 'text-green-600' : score >= 60 ? 'text-orange-500' : 'text-red-500'}`}>
-                          {score}%
-                        </span>
-                      )}
-                      <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Right column: Missions, Badges, Stats */}
-        <div className="space-y-6">
-
-          {/* Today's Missions */}
-          <div className="bg-card border rounded-2xl p-5 shadow-sm space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="font-semibold flex items-center gap-2">
-                <Target className="w-4 h-4 text-primary" />
-                Today&apos;s Missions
-              </h3>
-              <span className="text-xs text-muted-foreground">
-                {missionTasks.filter(t => t.completed).length}/{missionTasks.length} done
-              </span>
-            </div>
-            <div className="space-y-2.5">
-              {missionTasks.map(task => (
-                <div key={task.id} className="flex items-start gap-2.5">
-                  {task.completed
-                    ? <CheckCircle className="w-4 h-4 text-green-500 shrink-0 mt-0.5" />
-                    : <Circle className="w-4 h-4 text-muted-foreground/40 shrink-0 mt-0.5" />}
-                  <span className={`text-sm ${task.completed ? 'line-through text-muted-foreground' : ''}`}>
-                    {task.label}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Activity Summary */}
-          <div className="bg-card border rounded-2xl p-5 shadow-sm space-y-4">
-            <h3 className="font-semibold flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-primary" /> Your Progress
-            </h3>
-            <div className="grid grid-cols-2 gap-3">
-              {[
-                { label: 'Skills', value: skillCount, icon: MonitorCheck, color: 'text-blue-600' },
-                { label: 'Experience', value: expCount, icon: Briefcase, color: 'text-purple-600' },
-                { label: 'Projects', value: projectCount, icon: Code2, color: 'text-green-600' },
-                { label: 'Certs', value: profile?.certifications.length ?? 0, icon: Trophy, color: 'text-orange-600' },
-              ].map(stat => (
-                <div key={stat.label} className="p-3 bg-muted/30 rounded-xl text-center">
-                  <stat.icon className={`w-4 h-4 mx-auto mb-1 ${stat.color}`} />
-                  <div className="text-2xl font-bold">{stat.value}</div>
-                  <div className="text-[10px] text-muted-foreground">{stat.label}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Recent Badges */}
-          {(dbUser?.userBadges.length ?? 0) > 0 ? (
-            <div className="bg-card border rounded-2xl p-5 shadow-sm space-y-4">
-              <h3 className="font-semibold flex items-center gap-2">
-                <Trophy className="w-4 h-4 text-yellow-500" /> Recent Badges
-              </h3>
-              <div className="space-y-2">
-                {dbUser?.userBadges.map(ub => (
-                  <div key={ub.id} className="flex items-center gap-3 p-2 rounded-lg bg-muted/20">
-                    <div className="w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center text-base">🏆</div>
-                    <div>
-                      <div className="text-sm font-medium">{ub.badge.name}</div>
-                      <div className="text-xs text-muted-foreground">{ub.badge.category}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <Link href="/dashboard/achievements" className="text-xs text-primary hover:underline flex items-center gap-1">
-                View all achievements <ArrowRight className="w-3 h-3" />
-              </Link>
-            </div>
-          ) : (
-            <div className="bg-card border rounded-2xl p-5 shadow-sm">
-              <h3 className="font-semibold flex items-center gap-2 mb-3">
-                <Trophy className="w-4 h-4 text-yellow-500" /> Achievements
-              </h3>
-              <p className="text-sm text-muted-foreground">Complete activities to earn your first badge.</p>
-              <Link href="/dashboard/achievements" className="text-xs text-primary hover:underline flex items-center gap-1 mt-2">
-                View badges <ArrowRight className="w-3 h-3" />
-              </Link>
-            </div>
-          )}
-
-          {/* Streak Calendar Teaser */}
-          <div className="bg-card border rounded-2xl p-5 shadow-sm space-y-3">
-            <h3 className="font-semibold flex items-center gap-2">
-              <Clock className="w-4 h-4 text-primary" /> Consistency
-            </h3>
-            <div className="flex items-center gap-2">
-              <div className="text-3xl font-bold">{streak}</div>
-              <div>
-                <div className="text-sm font-medium">day streak 🔥</div>
-                <div className="text-xs text-muted-foreground">
-                  Longest: {dbUser?.streakRecord?.longestStreak ?? 0} days
-                </div>
-              </div>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {streak > 0
-                ? `You've been consistent for ${streak} days. Don't break the chain!`
-                : 'Complete any career activity today to start your streak.'}
-            </p>
-          </div>
+          
         </div>
       </div>
     </div>

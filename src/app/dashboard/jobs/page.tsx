@@ -23,75 +23,129 @@ export default async function JobsIndexPage() {
     : [];
 
   return (
-    <div className="max-w-5xl mx-auto p-4 md:p-8 space-y-8">
-      <div className="flex items-center justify-between">
+    <div className="max-w-5xl mx-auto p-4 md:p-8 space-y-8 animate-in fade-in duration-500">
+      
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Job Targets</h1>
-          <p className="text-muted-foreground text-sm mt-1">Analyze job descriptions against your Master Profile.</p>
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+              <Briefcase className="w-5 h-5 text-primary" />
+            </div>
+            <h1 className="text-3xl font-bold tracking-tight">Job Intelligence</h1>
+          </div>
+          <p className="text-muted-foreground text-balance">
+            Analyze job descriptions against your Master Profile to get actionable insights.
+          </p>
         </div>
-        <Link href="/dashboard/jobs/new">
-          <Button className="gap-2">
-            <Plus className="w-4 h-4" /> Analyze New Job
-          </Button>
-        </Link>
+        <div>
+          <Link href="/dashboard/jobs/new">
+            <Button className="rounded-xl shadow-lg gap-2">
+              <Plus className="w-4 h-4" /> Analyze New Job
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {jobs.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-24 border rounded-2xl bg-card text-center space-y-4">
-          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-            <Briefcase className="w-8 h-8 text-primary/60" />
+        <div className="flex flex-col items-center justify-center py-24 border border-border/50 rounded-3xl bg-card shadow-sm text-center space-y-6">
+          <div className="w-20 h-20 rounded-full bg-primary/5 flex items-center justify-center relative">
+            <div className="absolute inset-0 rounded-full bg-primary/10 animate-ping opacity-20" />
+            <Briefcase className="w-8 h-8 text-primary" />
           </div>
-          <h2 className="text-xl font-semibold">No jobs analyzed yet</h2>
-          <p className="text-muted-foreground max-w-sm text-sm">
-            Paste a job description to see how well your profile matches and get a personalized gap analysis.
-          </p>
+          <div className="max-w-md px-4">
+            <h2 className="text-2xl font-bold mb-2">No jobs analyzed yet</h2>
+            <p className="text-muted-foreground text-balance">
+              Paste a job description to see how well your profile matches, get a personalized gap analysis, and automatically tailor your resume.
+            </p>
+          </div>
           <Link href="/dashboard/jobs/new">
-            <Button>Analyze Your First Job</Button>
+            <Button size="lg" className="rounded-xl shadow-lg gap-2">
+              <Plus className="w-4 h-4" /> Analyze Your First Job
+            </Button>
           </Link>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          
+          {/* Create New Card */}
+          <Link
+            href="/dashboard/jobs/new"
+            className="flex flex-col items-center justify-center gap-4 bg-muted/10 border-2 border-dashed border-border/60 rounded-3xl p-8 hover:border-primary/50 hover:bg-primary/5 transition-all text-center group min-h-[220px]"
+          >
+            <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center group-hover:bg-primary/10 group-hover:scale-110 transition-all duration-300">
+              <Plus className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
+            </div>
+            <div>
+              <div className="text-sm font-bold text-foreground mb-1">Analyze New Job</div>
+              <div className="text-xs text-muted-foreground font-medium">Extract requirements with AI</div>
+            </div>
+          </Link>
+
           {jobs.map(job => {
             const score = job.matchAnalysis?.overallScore;
-            const scoreColor = !score ? 'text-muted-foreground' 
-              : score >= 80 ? 'text-green-600' 
-              : score >= 60 ? 'text-orange-500' 
-              : 'text-red-500';
-            const scoreBg = !score ? 'bg-muted/30' 
-              : score >= 80 ? 'bg-green-50 border-green-200' 
-              : score >= 60 ? 'bg-orange-50 border-orange-200' 
-              : 'bg-red-50 border-red-200';
-
+            
             return (
               <Link
                 key={job.id}
                 href={`/dashboard/jobs/${job.id}`}
-                className="flex items-center justify-between p-5 bg-card border rounded-xl hover:border-primary/50 hover:shadow-sm transition-all group"
+                className="group flex flex-col bg-card border border-border/50 rounded-3xl p-6 hover:border-primary/50 hover:shadow-lg transition-all duration-300 min-h-[220px] relative overflow-hidden"
               >
-                <div className="flex items-center gap-4 flex-1 min-w-0">
-                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                    <Briefcase className="w-5 h-5 text-primary" />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="font-semibold truncate">{job.roleTitle}</div>
-                    <div className="text-sm text-muted-foreground">{job.company}{job.department ? ` · ${job.department}` : ''}</div>
-                    <div className="text-xs text-muted-foreground mt-0.5">
-                      {new Date(job.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                {/* Background Decor */}
+                <div className="absolute top-0 right-0 -mt-8 -mr-8 w-32 h-32 bg-primary/5 rounded-full blur-2xl group-hover:bg-primary/10 transition-colors" />
+                
+                <div className="relative z-10 flex-1">
+                  <div className="flex items-start justify-between gap-3 mb-5">
+                    <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0 border border-primary/10">
+                      <Briefcase className="w-6 h-6 text-primary" />
                     </div>
+                    {score ? (
+                      <div className={`px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-widest flex items-center gap-1 border ${
+                        score >= 80 ? 'bg-success/10 text-success border-success/20' :
+                        score >= 60 ? 'bg-warning/10 text-warning border-warning/20' :
+                        'bg-destructive/10 text-destructive border-destructive/20'
+                      }`}>
+                        <span>{score}% Match</span>
+                      </div>
+                    ) : (
+                      <div className="px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-widest bg-muted/50 text-muted-foreground flex items-center gap-1.5 border border-border/50">
+                        <Clock className="w-3.5 h-3.5" />
+                        <span>Analyzing</span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <h3 className="font-bold text-lg leading-tight mb-1 group-hover:text-primary transition-colors line-clamp-2">
+                    {job.roleTitle}
+                  </h3>
+                  <div className="text-sm text-muted-foreground font-medium mb-3">
+                    {job.company}{job.department ? ` · ${job.department}` : ''}
+                  </div>
+                  
+                  <div className="mt-auto pt-2">
+                    {score && (
+                      <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+                        <div 
+                          className={`h-full rounded-full ${
+                            score >= 80 ? 'bg-success' :
+                            score >= 60 ? 'bg-warning' :
+                            'bg-destructive'
+                          }`}
+                          style={{ width: `${score}%` }}
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                <div className="flex items-center gap-4 shrink-0 ml-4">
-                  {job.matchAnalysis ? (
-                    <div className={`px-3 py-1.5 rounded-lg border text-sm font-bold ${scoreBg} ${scoreColor}`}>
-                      {score}% Match
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                      <Clock className="w-3.5 h-3.5" /> Analyzing...
-                    </div>
-                  )}
-                  <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                <div className="relative z-10 mt-6 pt-4 border-t border-border/50 flex items-center justify-between text-xs font-bold text-muted-foreground">
+                  <span className="uppercase tracking-widest">
+                    {new Date(job.createdAt).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
+                  </span>
+                  <div className="flex items-center gap-1 group-hover:text-primary transition-colors">
+                    <span>View Report</span>
+                    <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                  </div>
                 </div>
               </Link>
             );

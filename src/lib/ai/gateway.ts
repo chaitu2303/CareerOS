@@ -4,17 +4,21 @@
  * Never call AI providers directly — always use this gateway.
  */
 
-import { openai } from '@ai-sdk/openai';
-import { generateText, generateObject } from 'ai';
+import { generateText, generateObject, LanguageModel } from 'ai';
 import { z } from 'zod';
+import { getProviderInstance, AIProviderConfig } from './providers';
 
-// Model tiers: primary → fallback → minimal
-function getPrimaryModel() {
-  return openai('gpt-4o');
-}
-
-function getFallbackModel() {
-  return openai('gpt-4o-mini');
+function getActiveModel(): LanguageModel {
+  const currentProvider: AIProviderConfig['provider'] = (process.env.AI_PROVIDER as AIProviderConfig['provider']) || 'local';
+  const activeModelName = process.env.LOCAL_AI_MODEL || 'llama3';
+  const provider = getProviderInstance({ provider: currentProvider });
+  // Dynamic model fallback for testing, default to generic configured model
+  if (currentProvider === 'gemini') {
+    return provider('gemini-1.5-flash');
+  } else if (currentProvider === 'groq') {
+    return provider('llama3-8b-8192');
+  }
+  return provider(activeModelName);
 }
 
 /**
@@ -26,21 +30,15 @@ export async function askGateway(
 ): Promise<string> {
   try {
     const { text } = await generateText({
-      model: getPrimaryModel(),
+      model: getActiveModel(),
       system: options?.systemPrompt,
       prompt,
       maxOutputTokens: options?.maxTokens ?? 4096,
     });
     return text;
-  } catch {
-    // Fallback to smaller model
-    const { text } = await generateText({
-      model: getFallbackModel(),
-      system: options?.systemPrompt,
-      prompt,
-      maxOutputTokens: options?.maxTokens ?? 2048,
-    });
-    return text;
+  } catch (err: any) {
+    console.error("Primary AI Gateway failed:", err.message);
+    throw new Error(`AI Gateway Error: ${err.message}`);
   }
 }
 
@@ -54,20 +52,14 @@ export async function extractEntities<T>(
 ): Promise<T> {
   try {
     const { object } = await generateObject({
-      model: getPrimaryModel(),
+      model: getActiveModel(),
       schema,
       system: options?.systemPrompt,
       prompt,
     });
     return object;
-  } catch {
-    // Fallback
-    const { object } = await generateObject({
-      model: getFallbackModel(),
-      schema,
-      system: options?.systemPrompt,
-      prompt,
-    });
-    return object;
+  } catch (err: any) {
+    console.error("Primary AI Gateway structured generation failed:", err.message);
+    throw new Error(`AI Gateway Structured Generation Error: ${err.message}`);
   }
 }

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CareerOS Copilot</title>
+  <style>
+    body { font-family: -apple-system, sans-serif; width: 320px; padding: 16px; margin: 0; }
+    .header { font-weight: 600; font-size: 16px; margin-bottom: 12px; }
+    .btn { display: block; width: 100%; padding: 8px; background: #000; color: #fff; text-align: center; border-radius: 6px; cursor: pointer; border: none; margin-bottom: 8px; }
+    .btn:disabled { background: #ccc; cursor: not-allowed; }
+    .status { font-size: 12px; color: #666; margin-bottom: 16px; }
+  </style>
+</head>
+<body>
+  <div class="header">CareerOS Application Copilot</div>
+  <div id="auth-status" class="status">Checking authentication...</div>
+  
+  <button id="btn-detect" class="btn" disabled>Detect Application Fields</button>
+  <button id="btn-autofill" class="btn" disabled>Auto-fill Safe Fields</button>
+  <button id="btn-undo" class="btn" style="background:#fff; color:#000; border:1px solid #ccc" disabled>Undo Fill</button>
+
+  <script src="popup.js"></script>
+</body>
+</html>
