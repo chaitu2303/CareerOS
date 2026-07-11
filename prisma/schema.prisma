@@ -1,0 +1,1320 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================
+// USERS & AUTH
+// ============================================
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  avatarUrl String?
+  timezone  String   @default("UTC")
+  publicHandle String? @unique
+  isPublicProfile Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Core profile
+  careerProfile  CareerProfile?
+  careerPaths    UserCareerPath[]
+  simulations    RecruitmentSimulation[]
+  uploadedFiles  UploadedFile[]
+  jobApplications JobApplication[]
+  answerVault    ApplicationAnswerVault[]
+  jobTargets     JobTarget[]
+  resumes        Resume[]
+  applications   Application[]
+
+  // Assessments & Interviews
+  assessmentAttempts AssessmentAttempt[]
+  interviewSessions  InterviewSession[]
+  codingSubmissions  CodingSubmission[]
+  codingProgress     UserProblemProgress[]
+  questionBookmarks  QuestionBookmark[]
+  practiceSessions   PracticeSession[]
+
+  // Gamification
+  streakRecord  StreakRecord?
+  xpRecord      XpRecord?
+  userBadges    UserBadge[]
+  certificates  Certificate[]
+  dailyMissions DailyMission[]
+  notifications Notification[]
+  notificationPreference NotificationPreference?
+  activityEvents     ActivityEvent[]
+  readinessSnapshots CareerReadinessSnapshot[]
+}
+
+// ============================================
+// CAREER PROFILE — MILESTONES 1-3 (PRESERVED)
+// ============================================
+
+model UploadedFile {
+  id               String   @id @default(uuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  originalFilename String
+  mimeType         String
+  sizeBytes        Int
+  storagePath      String
+  processingStatus String   // UPLOADED | EXTRACTING | ANALYZING | READY | FAILED
+  checksum         String?
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  provenances      FactProvenance[]
+}
+
+enum FactStatus {
+  AI_EXTRACTED
+  USER_CONFIRMED
+  USER_CREATED
+  CONFLICTED
+  ARCHIVED
+}
+
+model CareerProfile {
+  id               String   @id @default(uuid())
+  userId           String   @unique
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  completenessScore Int     @default(0)
+
+  // Target career info
+  department       String?  // CSE | Civil | Management | Finance etc.
+  careerStage      String?  // Student | Fresher | Professional | Switcher
+  targetRoles      Json?    // string[]
+  targetIndustries Json?    // string[]
+
+  basics           ProfileBasics?
+  experiences      ExperienceFact[]
+  educations       EducationFact[]
+  skills           SkillFact[]
+  projects         ProjectFact[]
+  certifications   CertificationFact[]
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model ProfileBasics {
+  id              String         @id @default(uuid())
+  profileId       String         @unique
+  profile         CareerProfile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  name            String?
+  email           String?
+  phone           String?
+  location        String?
+  summary         String?        @db.Text
+  linkedinUrl     String?
+  githubUrl       String?
+  portfolioUrl    String?
+
+  status          FactStatus     @default(AI_EXTRACTED)
+  provenance      FactProvenance?
+
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}
+
+model ExperienceFact {
+  id              String         @id @default(uuid())
+  profileId       String
+  profile         CareerProfile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  role            String
+  company         String
+  duration        String?
+  startDate       String?
+  endDate         String?
+  isCurrent       Boolean        @default(false)
+  description     String?        @db.Text
+  highlights      Json?          // string[] bullet points
+
+  status          FactStatus     @default(AI_EXTRACTED)
+  provenance      FactProvenance?
+
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}
+
+model EducationFact {
+  id              String         @id @default(uuid())
+  profileId       String
+  profile         CareerProfile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  degree          String
+  institution     String
+  year            String?
+  gpa             String?
+  field           String?
+
+  status          FactStatus     @default(AI_EXTRACTED)
+  provenance      FactProvenance?
+
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}
+
+model SkillFact {
+  id              String         @id @default(uuid())
+  profileId       String
+  profile         CareerProfile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  name            String
+  category        String?        // Language | Framework | Tool | Soft Skill | Domain
+  proficiency     String?        // Beginner | Intermediate | Advanced | Expert
+
+  status          FactStatus     @default(AI_EXTRACTED)
+  provenance      FactProvenance?
+
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}
+
+model ProjectFact {
+  id              String         @id @default(uuid())
+  profileId       String
+  profile         CareerProfile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  name            String
+  description     String?        @db.Text
+  techStack       Json?          // string[]
+  url             String?
+  repoUrl         String?
+
+  status          FactStatus     @default(AI_EXTRACTED)
+  provenance      FactProvenance?
+
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}
+
+model CertificationFact {
+  id              String         @id @default(uuid())
+  profileId       String
+  profile         CareerProfile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  name            String
+  issuer          String?
+  year            String?
+  credentialId    String?
+  credentialUrl   String?
+
+  status          FactStatus     @default(AI_EXTRACTED)
+  provenance      FactProvenance?
+
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}
+
+model FactProvenance {
+  id              String         @id @default(uuid())
+
+  basicsId        String?        @unique
+  basics          ProfileBasics? @relation(fields: [basicsId], references: [id], onDelete: Cascade)
+
+  experienceId    String?        @unique
+  experience      ExperienceFact? @relation(fields: [experienceId], references: [id], onDelete: Cascade)
+
+  educationId     String?        @unique
+  education       EducationFact? @relation(fields: [educationId], references: [id], onDelete: Cascade)
+
+  skillId         String?        @unique
+  skill           SkillFact?     @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  projectId       String?        @unique
+  project         ProjectFact?   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  certificationId String?        @unique
+  certification   CertificationFact? @relation(fields: [certificationId], references: [id], onDelete: Cascade)
+
+  sourceFileId    String?
+  sourceFile      UploadedFile?  @relation(fields: [sourceFileId], references: [id], onDelete: SetNull)
+
+  sourceText      String?        @db.Text
+  confidence      Int?
+  extractionMethod String
+
+  revisionHistory Json?
+
+  createdAt       DateTime       @default(now())
+}
+
+// ============================================
+// JOB INTELLIGENCE — MILESTONE 4
+// ============================================
+
+model JobTarget {
+  id               String   @id @default(uuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  company          String
+  roleTitle        String
+  department       String?
+  industry         String?
+  seniority        String?
+  jobDescription   String   @db.Text
+  sourceUrl        String?
+  sourceFileId     String?
+  sourceType       String   @default("TEXT") // TEXT | PDF | IMAGE | URL | MANUAL
+
+  extractedSkills  Json?
+  extractedReqs    Json?
+  keywords         Json?
+
+  matchAnalysis    JobMatchAnalysis?
+  applications     Application[]
+  atsReports       AtsReport[]
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model JobMatchAnalysis {
+  id               String    @id @default(uuid())
+  jobId            String    @unique
+  job              JobTarget @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  overallScore     Int
+  matchedSkills    Json
+  partialMatches   Json     @default("[]")
+  missingSkills    Json
+  resumeRecommendations   Json @default("[]")
+  interviewRecommendations Json @default("[]")
+
+  status           String   // ANALYZING | COMPLETED | FAILED
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+// ============================================
+// RESUME STUDIO — MILESTONE 5
+// ============================================
+
+model Resume {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  title           String
+  templateId      String   @default("modern")
+  isDefault       Boolean  @default(false)
+
+  content         Json     // Full resume structure
+  atsScore        Int?
+
+  versions        ResumeVersion[]
+  atsReports      AtsReport[]
+  applications    Application[]
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model ResumeVersion {
+  id              String   @id @default(uuid())
+  resumeId        String
+  resume          Resume   @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+
+  versionNumber   Int
+  title           String?
+  content         Json
+  changeNote      String?
+  tailoredForJob  String?  // JobTarget id reference
+
+  createdAt       DateTime @default(now())
+  atsReports      AtsReport[]
+}
+
+model AtsReport {
+  id               String   @id @default(uuid())
+  resumeId         String
+  resume           Resume   @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  
+  resumeVersionId  String
+  resumeVersion    ResumeVersion @relation(fields: [resumeVersionId], references: [id], onDelete: Cascade)
+  
+  jobId            String?
+  job              JobTarget? @relation(fields: [jobId], references: [id], onDelete: SetNull)
+
+  overallScore     Int
+  breakdown        Json     // { keywords, formatting, content, completeness }
+  findings         Json     @default("[]") // { type, severity, message, evidence, aiFixable }[]
+  missingKeywords  Json     @default("[]")
+  suggestions      Json     @default("[]")
+  parsingPreview   String?  @db.Text
+  parserSimulation Json     @default("{}") // The simulated extraction order and structure
+
+  createdAt        DateTime @default(now())
+}
+
+// ============================================
+// APPLICATION TRACKER — MILESTONE 14
+// ============================================
+
+model Application {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  jobId           String?
+  job             JobTarget? @relation(fields: [jobId], references: [id], onDelete: SetNull)
+
+  resumeId        String?
+  resume          Resume?  @relation(fields: [resumeId], references: [id], onDelete: SetNull)
+
+  company         String
+  roleTitle       String
+  status          String   @default("SAVED") // SAVED | PREPARING | APPLIED | ASSESSMENT | INTERVIEW | OFFER | REJECTED | WITHDRAWN
+  appliedAt       DateTime?
+  notes           String?  @db.Text
+  statusHistory   Json     @default("[]")
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// ============================================
+// ASSESSMENT ARENA — MILESTONES 7-9
+// ============================================
+
+// ============================================
+// ASSESSMENT & PRACTICE ARENA — MILESTONE 7
+// ============================================
+
+model Question {
+  id              String   @id @default(uuid())
+
+  department      String   // GENERAL | CSE | CIVIL | MECHANICAL | ECE | EEE
+  domain          String   // e.g., "Quantitative Aptitude", "Programming Fundamentals"
+  subject         String?
+  topic           String
+  subtopic        String?
+  
+  type            String   // MCQ | MULTI_SELECT | TRUE_FALSE | NUMERICAL | SHORT_ANSWER | LONG_ANSWER | SCENARIO
+  difficulty      String   // EASY | MEDIUM | HARD
+
+  questionText    String   @db.Text
+  options         Json?    // Option array: { id, text, isCorrect }[]
+  correctAnswer   String?  // Text answer for numerical/short answer
+  explanation     String?  @db.Text
+  hints           Json     @default("[]")
+
+  status          String   @default("DRAFT") // DRAFT | REVIEWED | PUBLISHED | ARCHIVED
+  source          String?  // AI_GENERATED | CURATED | IMPORTED
+  contentHash     String?  @unique // To prevent exact duplicates
+
+  tags            Json     @default("[]") // For QuestionTag taxonomy
+  
+  // Relations
+  attempts        AttemptAnswer[]
+  bookmarks       QuestionBookmark[]
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Assessment {
+  id              String   @id @default(uuid())
+
+  title           String
+  description     String?  @db.Text
+  instructions    String?  @db.Text
+  
+  department      String
+  domain          String
+  type            String   // APTITUDE | TECHNICAL | DOMAIN | MOCK_TEST | DAILY
+  difficulty      String
+  
+  durationMinutes Int?
+  topicCoverage   Json     @default("[]") // e.g. ["Arrays", "Pointers"]
+  
+  isPublished     Boolean  @default(false)
+  mode            String   @default("PRACTICE") // PRACTICE | TIMED | STRICT | DAILY | TOPIC | MOCK
+
+  sections        AssessmentSection[]
+  attempts        AssessmentAttempt[]
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model AssessmentSection {
+  id              String   @id @default(uuid())
+  assessmentId    String
+  assessment      Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  
+  title           String
+  description     String?
+  orderIndex      Int      @default(0)
+  
+  questionIds     Json     // string[] of Question IDs
+
+  createdAt       DateTime @default(now())
+}
+
+model AssessmentAttempt {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  assessmentId    String
+  assessment      Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+
+  mode            String   // PRACTICE | TIMED | STRICT
+  status          String   @default("IN_PROGRESS") // IN_PROGRESS | COMPLETED | ABANDONED
+  
+  score           Float?
+  maxScore        Float?
+  accuracy        Float?
+  timeTakenSeconds Int?
+  
+  isResumed       Boolean  @default(false)
+  securityEvents  Json     @default("[]") // { type: 'TAB_SWITCH' | 'FOCUS_LOSS' | 'PASTE', timestamp }[]
+
+  answers         AttemptAnswer[]
+  evaluationResult EvaluationResult?
+
+  startedAt       DateTime @default(now())
+  completedAt     DateTime?
+  updatedAt       DateTime @updatedAt
+}
+
+model AttemptAnswer {
+  id              String   @id @default(uuid())
+  attemptId       String
+  attempt         AssessmentAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  questionId      String
+  question        Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  answer          Json?    // User's provided answer(s)
+  isCorrect       Boolean?
+  score           Float?   @default(0)
+  
+  timeTakenSeconds Int     @default(0)
+  isMarkedForReview Boolean @default(false)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@unique([attemptId, questionId])
+}
+
+model EvaluationResult {
+  id              String   @id @default(uuid())
+  attemptId       String   @unique
+  attempt         AssessmentAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  
+  overallScore    Float
+  accuracy        Float
+  totalCorrect    Int
+  totalIncorrect  Int
+  totalUnanswered Int
+  
+  topicPerformance Json    // { topic, accuracy, timeSpent, totalQuestions }[]
+  difficultyPerformance Json // { difficulty, accuracy }[]
+  
+  strongestTopics Json     @default("[]")
+  weakestTopics   Json     @default("[]")
+  
+  recommendedNextSteps Json @default("[]")
+  
+  createdAt       DateTime @default(now())
+}
+
+model QuestionBookmark {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  questionId      String
+  question        Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  
+  note            String?  @db.Text
+  
+  createdAt       DateTime @default(now())
+  @@unique([userId, questionId])
+}
+
+model PracticeSession {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  topic           String
+  questionsAttempted Int   @default(0)
+  correctAnswers  Int      @default(0)
+  
+  startedAt       DateTime @default(now())
+  endedAt         DateTime?
+}
+
+// ============================================
+// DOMAIN INTELLIGENCE — MILESTONE 9
+// ============================================
+
+model CareerDomain {
+  id              String   @id @default(uuid())
+  slug            String   @unique
+  name            String
+  description     String   @db.Text
+  version         String   @default("1.0.0")
+  isActive        Boolean  @default(true)
+  metadata        Json?    // Pack metadata
+
+  roles           CareerRole[]
+  competencies    DomainCompetency[]
+  subjects        DomainSubject[]
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model CareerRole {
+  id              String   @id @default(uuid())
+  domainId        String
+  domain          CareerDomain @relation(fields: [domainId], references: [id], onDelete: Cascade)
+  
+  slug            String   @unique
+  title           String
+  description     String   @db.Text
+  
+  competencies    Json     // Weighted importance of competencies [{ competencyId, weight }]
+  readinessRules  Json?    // Rules for readiness calculation
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model DomainCompetency {
+  id              String   @id @default(uuid())
+  domainId        String
+  domain          CareerDomain @relation(fields: [domainId], references: [id], onDelete: Cascade)
+  
+  slug            String   @unique
+  name            String
+  description     String   @db.Text
+  
+  subjects        DomainSubject[]
+  skills          DomainSkill[]
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model DomainSubject {
+  id              String   @id @default(uuid())
+  domainId        String
+  domain          CareerDomain @relation(fields: [domainId], references: [id], onDelete: Cascade)
+  competencyId    String?
+  competency      DomainCompetency? @relation(fields: [competencyId], references: [id], onDelete: SetNull)
+  
+  slug            String   @unique
+  name            String
+  description     String?  @db.Text
+  
+  topics          DomainTopic[]
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model DomainTopic {
+  id              String   @id @default(uuid())
+  subjectId       String
+  subject         DomainSubject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  
+  slug            String   @unique
+  name            String
+  
+  subtopics       Json     @default("[]") // string[]
+  skills          DomainSkill[]
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model DomainSkill {
+  id              String   @id @default(uuid())
+  competencyId    String?
+  competency      DomainCompetency? @relation(fields: [competencyId], references: [id], onDelete: SetNull)
+  topicId         String?
+  topic           DomainTopic? @relation(fields: [topicId], references: [id], onDelete: SetNull)
+  
+  slug            String   @unique
+  name            String
+  type            String   // HARD_SKILL | SOFT_SKILL | TOOL | CONCEPT
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model UserCareerPath {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  domainId        String
+  roleId          String
+  
+  progress        Json     @default("{}") // Pre-calculated readiness
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// ============================================
+// CODING ARENA — MILESTONE 8
+// ============================================
+
+model CodingProblem {
+  id              String   @id @default(uuid())
+  
+  title           String
+  slug            String   @unique
+  difficulty      String   // EASY | MEDIUM | HARD
+  topic           String
+  department      String?
+  domain          String?
+  
+  description     String   @db.Text
+  inputFormat     String?  @db.Text
+  outputFormat    String?  @db.Text
+  explanation     String?  @db.Text
+  editorial       String?  @db.Text
+  
+  timeLimit       Int      @default(2000)  // ms
+  memoryLimit     Int      @default(256)   // MB
+  
+  status          String   @default("DRAFT") // DRAFT | REVIEWED | PUBLISHED | ARCHIVED
+  
+  isDailyChallenge Boolean @default(false)
+  dailyDate       String?
+
+  constraints     ProblemConstraint[]
+  examples        ProblemExample[]
+  languages       SupportedLanguage[]
+  templates       CodeTemplate[]
+  testCases       TestCase[]
+  submissions     CodingSubmission[]
+  progress        UserProblemProgress[]
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model ProblemConstraint {
+  id              String   @id @default(uuid())
+  problemId       String
+  problem         CodingProblem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  content         String
+  orderIndex      Int      @default(0)
+}
+
+model ProblemExample {
+  id              String   @id @default(uuid())
+  problemId       String
+  problem         CodingProblem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  input           String   @db.Text
+  output          String   @db.Text
+  explanation     String?  @db.Text
+  orderIndex      Int      @default(0)
+}
+
+model SupportedLanguage {
+  id              String   @id @default(uuid())
+  problemId       String
+  problem         CodingProblem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  language        String   // javascript, python, cpp, java
+  version         String?
+}
+
+model CodeTemplate {
+  id              String   @id @default(uuid())
+  problemId       String
+  problem         CodingProblem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  language        String
+  code            String   @db.Text
+}
+
+model TestCase {
+  id              String   @id @default(uuid())
+  problemId       String
+  problem         CodingProblem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  input           String   @db.Text
+  expectedOutput  String   @db.Text
+  isHidden        Boolean  @default(true)
+  orderIndex      Int      @default(0)
+  
+  results         TestCaseResult[]
+}
+
+model CodingSubmission {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  problemId       String
+  problem         CodingProblem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  language        String
+  code            String   @db.Text
+  status          String   // ACCEPTED | WRONG_ANSWER | TLE | MLE | RE | CE | PENDING
+  
+  result          SubmissionResult?
+  testCaseResults TestCaseResult[]
+
+  submittedAt     DateTime @default(now())
+}
+
+model SubmissionResult {
+  id              String   @id @default(uuid())
+  submissionId    String   @unique
+  submission      CodingSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  
+  testsPassed     Int
+  testsTotal      Int
+  executionMs     Int?
+  memoryUsedKb    Int?
+  
+  compilerError   String?  @db.Text
+  runtimeError    String?  @db.Text
+}
+
+model TestCaseResult {
+  id              String   @id @default(uuid())
+  submissionId    String
+  submission      CodingSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  testCaseId      String
+  testCase        TestCase @relation(fields: [testCaseId], references: [id], onDelete: Cascade)
+  
+  status          String   // PASSED | FAILED | TLE | MLE | RE
+  actualOutput    String?  @db.Text
+  executionMs     Int?
+  memoryUsedKb    Int?
+  errorOutput     String?  @db.Text
+}
+
+model UserProblemProgress {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  problemId       String
+  problem         CodingProblem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  
+  status          String   // ATTEMPTED | SOLVED
+  attempts        Int      @default(0)
+  firstSolvedAt   DateTime?
+  lastAttemptedAt DateTime @default(now())
+  
+  @@unique([userId, problemId])
+}
+
+// ============================================
+// AI MOCK INTERVIEW — MILESTONES 10-11
+// ============================================
+
+model InterviewSession {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  title           String
+  type            String   // TECHNICAL | BEHAVIORAL | HR | MANAGERIAL | PROJECT_VIVA | STRESS | RAPID_FIRE | FULL_SIM
+  department      String?
+  targetRole      String?
+  industry        String?
+  difficulty      String   @default("MEDIUM")
+  durationMinutes Int      @default(30)
+  mode            String   @default("PRACTICE") // PRACTICE | STRICT
+
+  resumeId        String?
+  jobId           String?
+
+  status          String   @default("SCHEDULED") // SCHEDULED | IN_PROGRESS | COMPLETED | ABANDONED
+
+  conversationLog Json     @default("[]")  // { role, content, timestamp, type, evaluation? }[]
+  integrityEvents Json     @default("[]")  // Legacy: { type, timestamp, metadata }[] - Moved to InterviewIntegrityEvent
+  interviewPlan   Json?    // Orchestrator's generated plan and current state
+  competencyCoverage Json? // Tracking which competencies have been covered and depth
+
+  evaluation      InterviewEvaluation?
+  consent         InterviewConsent?
+  events          InterviewIntegrityEvent[]
+  mediaState      InterviewMediaState?
+
+  scheduledAt     DateTime?
+  startedAt       DateTime?
+  completedAt     DateTime?
+  createdAt       DateTime @default(now())
+}
+
+model InterviewConsent {
+  id              String   @id @default(uuid())
+  sessionId       String   @unique
+  session         InterviewSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  
+  version         String   @default("1.0")
+  cameraAccess    Boolean  @default(false)
+  micAccess       Boolean  @default(false)
+  tabMonitoring   Boolean  @default(false)
+  fullscreenMonitoring Boolean @default(false)
+  clipboardLogging Boolean @default(false)
+  videoRecording  Boolean  @default(false)
+  audioRecording  Boolean  @default(false)
+  visualSignals   Boolean  @default(false)
+  
+  consentedAt     DateTime @default(now())
+}
+
+model InterviewIntegrityEvent {
+  id              String   @id @default(uuid())
+  sessionId       String
+  session         InterviewSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  
+  type            String   // TAB_HIDDEN | WINDOW_BLUR | FULLSCREEN_EXIT | COPY_ATTEMPT | PASTE_ATTEMPT | CAMERA_DISABLED | MIC_DISABLED | FACE_NOT_PRESENT
+  timestamp       DateTime @default(now())
+  durationMs      Int?
+  severity        String   @default("INFO") // INFO | WARNING | CRITICAL
+  metadata        Json?    // Context-specific safe data
+}
+
+model InterviewMediaState {
+  id              String   @id @default(uuid())
+  sessionId       String   @unique
+  session         InterviewSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  
+  hasVideoRecording Boolean @default(false)
+  hasAudioRecording Boolean @default(false)
+  recordingUrl      String?
+  transcriptUrl     String?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model InterviewEvaluation {
+  id              String   @id @default(uuid())
+  sessionId       String   @unique
+  session         InterviewSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  overallScore    Int
+  technicalScore  Int?
+  communicationScore Int?
+  relevanceScore  Int?
+  problemSolvingScore Int?
+
+  strengths       Json     @default("[]")
+  weaknesses      Json     @default("[]")
+  repeatedMistakes Json    @default("[]")
+  skillGaps       Json     @default("[]")
+
+  questionBreakdown Json   @default("[]")  // per-question analysis
+
+  plan3Day        String?  @db.Text
+  plan7Day        String?  @db.Text
+  plan30Day       String?  @db.Text
+  nextInterviewRec String?
+
+  integrityReport Json?
+
+  createdAt       DateTime @default(now())
+}
+
+// ============================================
+// GAMIFICATION — MILESTONES 15-16
+// ============================================
+
+model StreakRecord {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  currentStreak   Int      @default(0)
+  longestStreak   Int      @default(0)
+  lastActivityAt  DateTime?
+  activityLog     Json     @default("[]")  // { date, activities }[]
+}
+
+model XpRecord {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  totalXp         Int      @default(0)
+  currentLevel    Int      @default(1)
+  events          XpEvent[]
+}
+
+model ActivityEvent {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  type            String   // PROFILE_COMPLETED | RESUME_CREATED | CODING_PROBLEM_SOLVED | etc.
+  sourceModule    String
+  sourceEntityId  String?
+  timestamp       DateTime @default(now())
+  
+  isVerified      Boolean  @default(true)
+  metadata        Json?
+  idempotencyKey  String   @unique
+}
+
+model XpEvent {
+  id              String   @id @default(uuid())
+  xpRecordId      String
+  xpRecord        XpRecord @relation(fields: [xpRecordId], references: [id], onDelete: Cascade)
+
+  activity        String
+  xpEarned        Int
+  description     String?
+
+  createdAt       DateTime @default(now())
+}
+
+model Badge {
+  id              String   @id @default(uuid())
+  slug            String   @unique
+  name            String
+  description     String
+  category        String   // CONSISTENCY | SKILL | INTERVIEW | CODING | DOMAIN | ACHIEVEMENT
+  level           String   @default("FOUNDATION") // FOUNDATION | SKILLED | ADVANCED | MASTERY
+  criteria        Json
+  iconUrl         String?
+  isActive        Boolean  @default(true)
+
+  userBadges      UserBadge[]
+
+  createdAt       DateTime @default(now())
+}
+
+model UserBadge {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badgeId         String
+  badge           Badge    @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+
+  earnedAt        DateTime @default(now())
+  evidence        Json?
+
+  @@unique([userId, badgeId])
+}
+
+model Certificate {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  certificateCode String   @unique  // Public verification ID
+  title           String
+  track           String?
+  score           Int?
+  competencies    Json     @default("[]")
+  isValid         Boolean  @default(true) // Legacy field, keeping for compat
+
+  status          String   @default("VALID") // VALID | REVOKED | EXPIRED
+  credentialVersion String @default("1.0")
+  pdfUrl          String?
+  qrUrl           String?
+  
+  issuedAt        DateTime @default(now())
+}
+
+model DailyMission {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  missionDate     String   // YYYY-MM-DD
+  tasks           Json     // { id, label, type, completed }[]
+  isCompleted     Boolean  @default(false)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([userId, missionDate])
+}
+
+model Notification {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  type            String   // STREAK_RISK | BADGE_EARNED | REPORT_READY | MISSION | etc.
+  priority        String   @default("INFO") // INFO | SUCCESS | WARNING | ACTION_REQUIRED
+  title           String
+  body            String
+  isRead          Boolean  @default(false)
+  isDismissed     Boolean  @default(false)
+  actionUrl       String?
+  sourceModule    String?
+  sourceEntityId  String?
+  deduplicationKey String?
+
+  createdAt       DateTime @default(now())
+}
+
+model NotificationPreference {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  emailEnabled    Boolean  @default(false)
+  pushEnabled     Boolean  @default(false)
+  inAppEnabled    Boolean  @default(true)
+  
+  categories      Json     @default("[]") // E.g. ["APPLICATIONS", "STREAKS", "ACHIEVEMENTS"]
+}
+
+// ============================================
+// RECRUITMENT SIMULATOR — MILESTONE 12
+// ============================================
+
+model RecruitmentSimulation {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  domainId        String?
+  roleId          String?
+  jobId           String?
+  resumeId        String?
+  
+  mode            String   @default("PRACTICE") // PRACTICE | STRICT
+  status          String   @default("READY")    // READY | IN_PROGRESS | COMPLETED | ABANDONED
+  
+  blueprint       Json     // Full structural plan of the simulation
+  rounds          RecruitmentRound[]
+  report          SimulationReport?
+  
+  startedAt       DateTime?
+  completedAt     DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model RecruitmentRound {
+  id              String   @id @default(uuid())
+  simulationId    String
+  simulation      RecruitmentSimulation @relation(fields: [simulationId], references: [id], onDelete: Cascade)
+  
+  type            String   // ASSESSMENT | CODING | INTERVIEW | CASE_STUDY
+  title           String
+  description     String?  @db.Text
+  orderIndex      Int      @default(0)
+  
+  status          String   @default("LOCKED") // LOCKED | READY | IN_PROGRESS | COMPLETED | FAILED | SKIPPED | UNAVAILABLE
+  capabilitiesRequired Json @default("[]") // e.g. ["SECURE_CODE_EXECUTION", "AI_PROVIDER"]
+  
+  attempts        RecruitmentRoundAttempt[]
+  result          RecruitmentRoundResult?
+  
+  // Link to specific engine entities if completed/in-progress
+  assessmentAttemptId String?
+  codingSubmissionId  String?
+  interviewSessionId  String?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model RecruitmentRoundAttempt {
+  id              String   @id @default(uuid())
+  roundId         String
+  round           RecruitmentRound @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  
+  startedAt       DateTime @default(now())
+  completedAt     DateTime?
+  status          String   @default("IN_PROGRESS") // IN_PROGRESS | COMPLETED | FAILED | ERROR
+}
+
+model RecruitmentRoundResult {
+  id              String   @id @default(uuid())
+  roundId         String   @unique
+  round           RecruitmentRound @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  
+  score           Float?
+  passed          Boolean
+  feedback        String?  @db.Text
+  evidence        Json?    // Detailed metrics from the specific adapter
+  
+  createdAt       DateTime @default(now())
+}
+
+model SimulationReport {
+  id              String   @id @default(uuid())
+  simulationId    String   @unique
+  simulation      RecruitmentSimulation @relation(fields: [simulationId], references: [id], onDelete: Cascade)
+  
+  overallReadiness Float?
+  competencyCoverage Json  @default("{}")
+  strongestStage  String?
+  weakestStage    String?
+  
+  executiveSummary String? @db.Text
+  actionPlan      Json     @default("[]")
+  
+  createdAt       DateTime @default(now())
+}
+
+// ============================================
+// AI JOB APPLICATION COPILOT & TRACKER — MILESTONES 13 & 14
+// ============================================
+
+model ApplicationAnswerVault {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  questionHash    String   // Hash or normalized version of the question
+  questionText    String   @db.Text
+  answerText      String   @db.Text
+  category        String   // e.g. "BEHAVIORAL", "LOGISTICAL", "CUSTOM"
+  
+  isApproved      Boolean  @default(true)
+  lastUsedAt      DateTime?
+  usageCount      Int      @default(0)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@unique([userId, questionHash])
+}
+
+model JobApplication {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  jobId           String?
+  resumeId        String?
+  companyName     String
+  roleTitle       String
+  jobUrl          String?
+  location        String?
+  workMode        String?  // REMOTE | HYBRID | ONSITE
+  employmentType  String?  // FULL_TIME | PART_TIME | CONTRACT | INTERNSHIP
+  jobIdentifier   String?  // External job ID
+  
+  status          String   @default("DISCOVERED") // DISCOVERED | SAVED | PREPARING | READY_TO_APPLY | APPLIED | ASSESSMENT | INTERVIEW | OFFER | HIRED | REJECTED | WITHDRAWN | ARCHIVED
+  source          String   @default("EXTENSION") // EXTENSION | MANUAL | PLATFORM | JOB_INTELLIGENCE
+  
+  priority        String   @default("MEDIUM") // HIGH | MEDIUM | LOW
+  deadline        DateTime?
+  salaryInfo      String?
+  notes           String?  @db.Text
+  nextAction      String?
+  followUpDate    DateTime?
+  
+  appliedAt       DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  history         ApplicationStatusHistory[]
+  activities      ApplicationActivity[]
+  appNotes        ApplicationNote[]
+  contacts        ApplicationContact[]
+  reminders       ApplicationReminder[]
+  documents       ApplicationDocument[]
+}
+
+// ============================================
+// CAREER PERFORMANCE CENTER — MILESTONE 17
+// ============================================
+
+model CareerReadinessSnapshot {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  targetRole      String
+  overallScore    Int?     // Null if INSUFFICIENT_DATA
+  dimensionScores Json     // { dimension, score, status, evidence }
+  formulaVersion  String   @default("READINESS_V1")
+  
+  createdAt       DateTime @default(now())
+}
+
+
+model ApplicationStatusHistory {
+  id              String   @id @default(uuid())
+  applicationId   String
+  application     JobApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  
+  previousStatus  String?
+  newStatus       String
+  changedAt       DateTime @default(now())
+  reason          String?
+}
+
+model ApplicationActivity {
+  id              String   @id @default(uuid())
+  applicationId   String
+  application     JobApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  
+  type            String   // STATUS_CHANGE | NOTE_ADDED | EMAIL_SENT | INTERVIEW_SCHEDULED
+  description     String
+  timestamp       DateTime @default(now())
+}
+
+model ApplicationNote {
+  id              String   @id @default(uuid())
+  applicationId   String
+  application     JobApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  
+  content         String   @db.Text
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model ApplicationContact {
+  id              String   @id @default(uuid())
+  applicationId   String
+  application     JobApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  
+  name            String
+  role            String?
+  contactMethod   String?
+  notes           String?  @db.Text
+  lastInteraction DateTime?
+  nextFollowUp    DateTime?
+  
+  createdAt       DateTime @default(now())
+}
+
+model ApplicationReminder {
+  id              String   @id @default(uuid())
+  applicationId   String
+  application     JobApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  
+  type            String   // DEADLINE | FOLLOW_UP | INTERVIEW | CUSTOM
+  title           String
+  dueDate         DateTime
+  isCompleted     Boolean  @default(false)
+  
+  createdAt       DateTime @default(now())
+}
+
+model ApplicationDocument {
+  id              String   @id @default(uuid())
+  applicationId   String
+  application     JobApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  
+  type            String   // RESUME | COVER_LETTER | PORTFOLIO | OTHER
+  fileUrl         String
+  fileName        String
+  
+  createdAt       DateTime @default(now())
+}
