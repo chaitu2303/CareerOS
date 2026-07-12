@@ -57,6 +57,23 @@ model User {
   notificationPreference NotificationPreference?
   activityEvents     ActivityEvent[]
   readinessSnapshots CareerReadinessSnapshot[]
+  passwordResetTokens PasswordResetToken[]
+}
+
+// ============================================
+// PASSWORD RESET TOKENS (secure single-use)
+// ============================================
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
 }
 
 // ============================================

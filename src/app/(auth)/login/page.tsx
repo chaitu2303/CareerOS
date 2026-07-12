@@ -3,10 +3,12 @@ import { useState, useEffect, Suspense } from 'react';
 import { signIn, useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { Eye, EyeOff } from 'lucide-react';
 
 function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
@@ -14,9 +16,8 @@ function LoginForm() {
   const searchParams = useSearchParams();
   const { data: session, status } = useSession();
 
-  // Show success message after registration redirect
   const justRegistered = searchParams.get('registered') === 'true';
-  // OAuth error
+  const justReset = searchParams.get('reset') === 'true';
   const oauthError = searchParams.get('error');
 
   // Redirect if already logged in
@@ -56,8 +57,6 @@ function LoginForm() {
     }
   };
 
-  // The useEffect above will redirect once session resolves.
-
   return (
     <div className="flex h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
       <div className="w-full max-w-md p-8 space-y-6 bg-white dark:bg-slate-900 rounded-xl shadow-lg border border-slate-200 dark:border-slate-800">
@@ -69,6 +68,12 @@ function LoginForm() {
         {justRegistered && (
           <div className="text-green-600 dark:text-green-400 text-sm text-center bg-green-50 dark:bg-green-900/20 rounded-lg p-3">
             Account created! Sign in to continue.
+          </div>
+        )}
+
+        {justReset && (
+          <div className="text-green-600 dark:text-green-400 text-sm text-center bg-green-50 dark:bg-green-900/20 rounded-lg p-3">
+            Password updated successfully. Sign in with your new password.
           </div>
         )}
 
@@ -93,17 +98,35 @@ function LoginForm() {
             />
           </div>
           <div>
-            <label htmlFor="password-input" className="block text-sm font-medium mb-1">Password</label>
-            <input
-              id="password-input"
-              data-testid="password-input"
-              type="password"
-              required
-              autoComplete="current-password"
-              className="w-full p-2.5 border rounded-lg bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-400"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-            />
+            <div className="flex items-center justify-between mb-1">
+              <label htmlFor="password-input" className="block text-sm font-medium">Password</label>
+              <Link
+                href="/forgot-password"
+                className="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
+              >
+                Forgot password?
+              </Link>
+            </div>
+            <div className="relative">
+              <input
+                id="password-input"
+                data-testid="password-input"
+                type={showPassword ? 'text' : 'password'}
+                required
+                autoComplete="current-password"
+                className="w-full p-2.5 pr-10 border rounded-lg bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-400"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+              />
+              <button
+                type="button"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                onClick={() => setShowPassword(v => !v)}
+                className="absolute inset-y-0 right-0 flex items-center px-3 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
           </div>
           <button
             type="submit"

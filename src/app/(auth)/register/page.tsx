@@ -3,15 +3,33 @@ import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { Eye, EyeOff, Check } from 'lucide-react';
+
+function getPasswordStrength(password: string) {
+  const checks = {
+    length: password.length >= 8,
+    upper: /[A-Z]/.test(password),
+    number: /[0-9]/.test(password),
+    special: /[^A-Za-z0-9]/.test(password),
+  };
+  const score = Object.values(checks).filter(Boolean).length;
+  return { checks, score };
+}
+
+const strengthLabel = ['', 'Weak', 'Fair', 'Good', 'Strong'];
+const strengthColor = ['', 'bg-red-500', 'bg-orange-400', 'bg-yellow-400', 'bg-green-500'];
 
 export default function RegisterPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const router = useRouter();
+
+  const { checks, score } = getPasswordStrength(password);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -134,19 +152,62 @@ export default function RegisterPage() {
             />
           </div>
           <div>
-            <label htmlFor="password-input" className="block text-sm font-medium mb-1">Password <span className="text-muted-foreground font-normal">(min 8 characters)</span></label>
-            <input
-              id="password-input"
-              data-testid="password-input"
-              type="password"
-              required
-              minLength={8}
-              autoComplete="new-password"
-              className="w-full p-2.5 border rounded-lg bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-400"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-            />
+            <label htmlFor="password-input" className="block text-sm font-medium mb-1">Password</label>
+            <div className="relative">
+              <input
+                id="password-input"
+                data-testid="password-input"
+                type={showPassword ? 'text' : 'password'}
+                required
+                minLength={8}
+                autoComplete="new-password"
+                className="w-full p-2.5 pr-10 border rounded-lg bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-400"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+              />
+              <button
+                type="button"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                onClick={() => setShowPassword(v => !v)}
+                className="absolute inset-y-0 right-0 flex items-center px-3 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+
+            {/* Password strength indicator */}
+            {password.length > 0 && (
+              <div className="mt-2 space-y-2">
+                <div className="flex gap-1">
+                  {[1, 2, 3, 4].map(i => (
+                    <div
+                      key={i}
+                      className={`h-1.5 flex-1 rounded-full transition-colors ${
+                        i <= score ? strengthColor[score] : 'bg-slate-200 dark:bg-slate-700'
+                      }`}
+                    />
+                  ))}
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Strength: <span className="font-medium">{strengthLabel[score] || 'Too short'}</span>
+                </p>
+                <ul className="grid grid-cols-2 gap-1">
+                  {[
+                    { key: 'length', label: '8+ characters' },
+                    { key: 'upper', label: 'Uppercase letter' },
+                    { key: 'number', label: 'Number' },
+                    { key: 'special', label: 'Special character' },
+                  ].map(({ key, label }) => (
+                    <li key={key} className={`flex items-center gap-1 text-xs ${(checks as any)[key] ? 'text-green-600 dark:text-green-400' : 'text-slate-400'}`}>
+                      <Check className="w-3 h-3" />
+                      {label}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
+
           <button
             type="submit"
             data-testid="register-button"
