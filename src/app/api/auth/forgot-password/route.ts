@@ -35,7 +35,7 @@ export async function POST(req: Request) {
       // Generate cryptographically secure random token
       const rawToken = crypto.randomBytes(32).toString('base64url');
 
-      // Hash it — only the hash is stored, raw token goes in the email link
+      // Hash it
       const tokenHash = await bcrypt.hash(rawToken, 10);
 
       // Store with 1-hour expiry
@@ -47,16 +47,13 @@ export async function POST(req: Request) {
         }
       });
 
-      // Send email (non-blocking from response perspective — errors logged)
-      try {
-        await sendPasswordResetEmail(user.email!, rawToken);
-      } catch (emailErr) {
-        console.error('[forgot-password] Email send failed:', emailErr);
-        // Still return generic success — token is in DB, user can retry
-      }
+      // Instead of email, return the redirect URL directly (as requested by user)
+      return NextResponse.json({ 
+        redirectUrl: `/reset-password?token=${rawToken}` 
+      });
     }
 
-    // Always return same response — never reveal if email exists
+    // If user not found, return generic response
     return GENERIC_RESPONSE;
 
   } catch (error) {

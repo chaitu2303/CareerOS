@@ -1,11 +1,13 @@
 'use client';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'success'>('idle');
   const [error, setError] = useState('');
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,13 +21,19 @@ export default function ForgotPasswordPage() {
         body: JSON.stringify({ email }),
       });
 
-      // We don't check for 404s intentionally. The API always returns 200
-      // unless there's a severe server error, to prevent email enumeration.
       if (!res.ok) {
         throw new Error('An error occurred. Please try again.');
       }
 
-      setStatus('success');
+      const data = await res.json();
+      
+      if (data.redirectUrl) {
+        // Bypass email completely and redirect to reset page
+        router.push(data.redirectUrl);
+      } else {
+        // If no redirectUrl is returned (e.g. email not found), just show generic success state
+        setStatus('success');
+      }
     } catch (err: any) {
       setError(err.message);
       setStatus('idle');

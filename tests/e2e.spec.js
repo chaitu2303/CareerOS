@@ -17,7 +17,7 @@ test.describe('CareerOS Production E2E Tests', () => {
     await page.getByLabel('Full Name').fill(name);
     await page.getByLabel('Email').fill(user1Email);
     // Password label has trailing "(min 8 characters)" — use exact:false
-    await page.getByLabel('Password', { exact: false }).fill(password);
+    await page.getByTestId('password-input').fill(password);
     await page.getByRole('button', { name: 'Create Account' }).click();
 
     // After register, new flow: auto-signin → /onboarding (no intermediate /login step)
@@ -67,7 +67,7 @@ test.describe('CareerOS Production E2E Tests', () => {
     await page.goto(`${PROD_URL}/register`);
     await page.getByLabel('Full Name').fill(name);
     await page.getByLabel('Email').fill(user2Email);
-    await page.getByLabel('Password', { exact: false }).fill(password);
+    await page.getByTestId('password-input').fill(password);
     await page.getByRole('button', { name: 'Create Account' }).click();
 
     // New flow goes directly to /onboarding
@@ -97,7 +97,7 @@ test.describe('CareerOS Production E2E Tests', () => {
     await page.setViewportSize({ width: 375, height: 667 });
     await page.goto(`${PROD_URL}/login`);
     await page.getByLabel('Email').fill(user1Email);
-    await page.getByLabel('Password', { exact: false }).fill(password);
+    await page.getByTestId('password-input').fill(password);
     await page.getByRole('button', { name: 'Sign In', exact: true }).click();
     // User 1 completed onboarding? If not, may land on /onboarding again
     await page.waitForURL(/\/(dashboard|onboarding)/, { timeout: 30000 });
@@ -112,7 +112,7 @@ test.describe('CareerOS Production E2E Tests', () => {
     // Login as User 1
     await page.goto(`${PROD_URL}/login`);
     await page.getByLabel('Email').fill(user1Email);
-    await page.getByLabel('Password', { exact: false }).fill(password);
+    await page.getByTestId('password-input').fill(password);
     await page.getByRole('button', { name: 'Sign In', exact: true }).click();
     await page.waitForURL(/\/(dashboard|onboarding)/, { timeout: 30000 });
 
@@ -162,6 +162,36 @@ test.describe('CareerOS Production E2E Tests', () => {
     await page.goto(`${PROD_URL}/dashboard/tools`);
     await page.waitForURL('**/dashboard/tools', { timeout: 15000 });
     expect(page.url()).toContain('/dashboard/tools');
+  });
+
+  test('Password UX and Reset Flow', async ({ page }) => {
+    test.setTimeout(60000);
+    await page.context().clearCookies();
+
+    // 1. Password Visibility Toggle on Login
+    await page.goto(`${PROD_URL}/login`);
+    const passwordInput = page.getByTestId('password-input');
+    await expect(passwordInput).toHaveAttribute('type', 'password');
+    // Click show password
+    await page.getByRole('button', { name: /show password/i }).click();
+    await expect(passwordInput).toHaveAttribute('type', 'text');
+    
+    // 2. Forgot Password Flow
+    await page.getByRole('link', { name: /forgot password/i }).click();
+    await page.waitForURL('**/forgot-password');
+    await page.getByLabel('Email').fill(user1Email);
+    await page.getByRole('button', { name: /send reset link/i }).click();
+    // Verify generic success message appears
+    await expect(page.getByText(/If that email is registered/i)).toBeVisible();
+
+    // 3. Reset Password API direct test (since we can't extract the token from email in E2E)
+    // The API should handle invalid token safely
+    const resetRes = await page.request.post(`${PROD_URL}/api/auth/reset-password`, {
+      data: { token: 'invalid_token_123', newPassword: 'NewPassword123!' }
+    });
+    expect(resetRes.status()).toBe(400);
+    const resetBody = await resetRes.json();
+    expect(resetBody.error).toContain('invalid or has expired');
   });
 
   test('Error States & Unauthorized Access', async ({ request, page }) => {
