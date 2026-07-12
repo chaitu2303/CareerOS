@@ -9,6 +9,10 @@ import { Pool } from 'pg';
 // Decode the raw postgres URL from the prisma+postgres API key
 function getRawPostgresUrl(): string {
   const url = process.env.DATABASE_URL ?? '';
+  if (!url) {
+    console.warn("DATABASE_URL is missing. App is in UNAVAILABLE state for DB operations.");
+    return 'postgres://dummy:dummy@localhost:5432/dummy';
+  }
   if (url.startsWith('postgres://') || url.startsWith('postgresql://')) {
     return url;
   }

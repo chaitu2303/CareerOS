@@ -3,6 +3,7 @@ import { createClient } from '@/utils/supabase/server';
 import { prisma } from '@/lib/prisma';
 import { extractEntities } from '@/lib/ai/gateway';
 import { JobRequirementSchema, MatchAnalysisSchema } from '@/lib/ai/job-schema';
+import { SkillFact, ExperienceFact, EducationFact, ProjectFact, CertificationFact } from '@prisma/client';
 
 export const dynamic = 'force-dynamic';
 
@@ -79,11 +80,11 @@ export async function POST(req: Request) {
     // ── Stage 4: AI Gap Analysis ────────────────────────────────────────────
     // Build a fact-indexed profile context (evidence IDs for grounding)
     const profileContext = {
-      skills: profile?.skills.map(s => ({ id: s.id, name: s.name, category: s.category })) ?? [],
-      experience: profile?.experiences.map(e => ({ id: e.id, role: e.role, company: e.company, description: e.description })) ?? [],
-      education: profile?.educations.map(e => ({ id: e.id, degree: e.degree, institution: e.institution })) ?? [],
-      projects: profile?.projects.map(p => ({ id: p.id, name: p.name, description: p.description, techStack: p.techStack })) ?? [],
-      certifications: profile?.certifications.map(c => ({ id: c.id, name: c.name, issuer: c.issuer })) ?? [],
+      skills: profile?.skills.map((s: SkillFact) => ({ id: s.id, name: s.name, category: s.category })) ?? [],
+      experience: profile?.experiences.map((e: ExperienceFact) => ({ id: e.id, role: e.role, company: e.company, description: e.description })) ?? [],
+      education: profile?.educations.map((e: EducationFact) => ({ id: e.id, degree: e.degree, institution: e.institution })) ?? [],
+      projects: profile?.projects.map((p: ProjectFact) => ({ id: p.id, name: p.name, description: p.description, techStack: p.techStack })) ?? [],
+      certifications: profile?.certifications.map((c: CertificationFact) => ({ id: c.id, name: c.name, issuer: c.issuer })) ?? [],
     };
 
     const hasProfile = Object.values(profileContext).some(arr => arr.length > 0);
