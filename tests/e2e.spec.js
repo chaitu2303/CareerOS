@@ -104,6 +104,63 @@ test.describe('CareerOS Production E2E Tests', () => {
     expect(page.url()).toMatch(/\/(dashboard|onboarding)/);
   });
 
+  test('Onboarding Resume Extraction (PDF)', async ({ page }) => {
+    test.setTimeout(60000);
+    const pdfUserEmail = `pdf_user_${Date.now()}@example.com`;
+    
+    // 1. Signup a fresh user
+    await page.goto(`${PROD_URL}/register`);
+    await page.getByLabel('Full Name').fill('PDF Tester');
+    await page.getByLabel('Email').fill(pdfUserEmail);
+    await page.getByTestId('password-input').fill(password);
+    await page.getByRole('button', { name: 'Create Account' }).click();
+
+    // 2. Walk through onboarding to Resume Import
+    await page.waitForURL('**/onboarding', { timeout: 30000 });
+    await page.getByRole('button', { name: 'Continue' }).click(); // BASIC_PROFILE
+    await page.getByText('Software Engineering').click(); // DOMAIN
+    await page.getByLabel('Target Job Title').fill('Frontend Developer');
+    await page.getByLabel('Career Goal').fill('Build great UIs');
+    await page.getByRole('button', { name: 'Continue' }).click(); // TARGET_ROLE
+    
+    // 3. File Upload
+    // We expect a file input element
+    const fileChooserPromise = page.waitForEvent('filechooser');
+    await page.getByText('Click to upload PDF or DOCX').click();
+    const fileChooser = await fileChooserPromise;
+    await fileChooser.setFiles('./tests/test-resume.pdf');
+    
+    await page.getByRole('button', { name: 'Process Resume' }).click();
+    
+    // 4. Verification Step should appear with extracted data
+    // Waiting for success message or the next step
+    await page.waitForSelector('text=Extraction complete', { timeout: 15000 });
+    // Should transition to verification screen automatically or by clicking
+    await expect(page.getByText('Verify Extracted Info')).toBeVisible({ timeout: 10000 });
+    
+    // Verify our test data is extracted
+    // Depending on extraction logic, we check for presence of some data
+    await expect(page.locator('body')).toContainText('Software Engineer');
+    await expect(page.locator('body')).toContainText('React');
+    
+    // 5. Finish Setup
+    await page.getByRole('button', { name: 'Finish Setup' }).click();
+    await page.waitForURL('**/dashboard', { timeout: 15000 });
+    
+    // 6. Verify Persistence in Master Profile
+    const profileRes = await page.request.get(`${PROD_URL}/api/profile`);
+    const profileData = await profileRes.json();
+    const basics = profileData.profile.facts.basics.value;
+    expect(basics.name).toBe('PDF Tester');
+    expect(basics.targetRole).toBe('Frontend Developer');
+    
+    // We can also verify skills are saved
+    const skills = profileData.profile.facts.skills;
+    expect(skills.length).toBeGreaterThan(0);
+    const hasReact = skills.some((s) => s.name.toLowerCase() === 'react');
+    expect(hasReact).toBeTruthy();
+  });
+
   test('Core Workflows & Tools', async ({ page }) => {
     test.setTimeout(90000);
     // Clear any leftover session from previous test
