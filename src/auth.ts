@@ -12,8 +12,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   session: { strategy: 'jwt' },
   providers: [
     GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      // Auth.js v5 auto-reads AUTH_GOOGLE_ID and AUTH_GOOGLE_SECRET from env
       allowDangerousEmailAccountLinking: true,
     }),
     CredentialsProvider({

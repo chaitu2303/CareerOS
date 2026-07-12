@@ -126,7 +126,7 @@ function LoginForm() {
 
         <button
           onClick={handleGoogleSignIn}
-          disabled={googleLoading || !process.env.NEXT_PUBLIC_GOOGLE_ENABLED}
+          disabled={googleLoading}
           data-testid="google-signin-button"
           className="w-full border border-slate-200 dark:border-slate-700 p-2.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50 flex items-center justify-center gap-2 transition-colors font-medium"
         >
