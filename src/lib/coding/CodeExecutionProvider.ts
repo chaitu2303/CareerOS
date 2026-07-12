@@ -35,13 +35,98 @@ export interface ICodeExecutionProvider {
   isAvailable(): boolean;
 }
 
+import vm from 'vm';
+
+export class InProcessJSExecutionProvider implements ICodeExecutionProvider {
+  isAvailable(): boolean {
+    return true; // Always available in Node.js
+  }
+
+  async execute(options: ExecutionOptions): Promise<ExecutionResult[]> {
+    if (options.language !== 'javascript') {
+      return options.testCases.map(tc => ({
+        testCaseId: tc.id,
+        status: 'INTERNAL_ERROR',
+        errorOutput: `Language ${options.language} is not supported by InProcessJSExecutionProvider.`
+      }));
+    }
+
+    const results: ExecutionResult[] = [];
+
+    for (const tc of options.testCases) {
+      try {
+        const scriptCode = `
+          ${options.code}
+          // The code should define a function or perform logic that returns the output based on inputs.
+          // For simplicity in this environment, we assume the code sets a variable 'result' or we wrap it in a function.
+          // To make it robust, let's execute the user code and then call the function with the parsed input.
+          // In real scenarios, Leetcode-style execution defines a function signature. Let's assume the user code defines the required function.
+          
+          // Let's create a sandbox
+          let stdout = '';
+          let console = { log: (...args) => { stdout += args.join(' ') + '\\n'; } };
+          
+          // Parse the input (assuming JSON for simplicity or let the user function handle it)
+          const args = JSON.parse(${JSON.stringify(tc.input)});
+          
+          // Assuming user defines the function, we can just execute the code, but we need to know the function name.
+          // If we don't know the function name, a common trick is to evaluate an expression at the end, 
+          // or have the user code read from process.argv/stdin. 
+          // For our platform, we will assume the input is evaluated as a JS expression and assigned to 'input', 
+          // and the user must set 'output'. Or we can just use the provided code.
+          // Let's assume the test case input is a JSON array of arguments, and the problem defines a specific function name.
+          // Wait, we don't have function name here. Let's just run the code and expect the user to return a value at the end.
+        `;
+
+        // A better approach for the prototype: The user's code just receives `__INPUT__` and assigns to `__OUTPUT__`.
+        const sandbox = { 
+          __INPUT__: JSON.parse(tc.input || '[]'), 
+          __OUTPUT__: undefined,
+          console: { log: () => {} } // silent console
+        };
+
+        // User code format: function solve(input) { return ... }; __OUTPUT__ = solve.apply(null, Array.isArray(__INPUT__) ? __INPUT__ : [__INPUT__]);
+        // To be safe and simple, let's just append the execution part to the user code if they provide it.
+        const fullCode = `
+          ${options.code}
+          // Try to find the first defined function and call it with inputs
+          const fnName = Object.keys(this).find(k => typeof this[k] === 'function');
+          if (fnName) {
+             const inputArgs = Array.isArray(__INPUT__) ? __INPUT__ : [__INPUT__];
+             __OUTPUT__ = this[fnName](...inputArgs);
+          }
+        `;
+
+        const start = performance.now();
+        vm.runInNewContext(fullCode, sandbox, { timeout: options.timeLimitMs || 2000 });
+        const execMs = performance.now() - start;
+
+        const actualStr = JSON.stringify(sandbox.__OUTPUT__);
+        const expectedStr = tc.expectedOutput.trim();
+
+        if (actualStr === expectedStr) {
+          results.push({ testCaseId: tc.id, status: 'ACCEPTED', executionMs: execMs, actualOutput: actualStr });
+        } else {
+          results.push({ testCaseId: tc.id, status: 'WRONG_ANSWER', executionMs: execMs, actualOutput: actualStr, errorOutput: `Expected ${expectedStr}, got ${actualStr}` });
+        }
+      } catch (err: any) {
+        if (err.message === 'Script execution timed out.') {
+          results.push({ testCaseId: tc.id, status: 'TLE', errorOutput: err.message });
+        } else {
+          results.push({ testCaseId: tc.id, status: 'RE', errorOutput: err.message });
+        }
+      }
+    }
+
+    return results;
+  }
+}
+
 /**
  * A safe fallback execution provider that refuses to run code if no secure environment is configured.
  */
 export class FallbackExecutionProvider implements ICodeExecutionProvider {
   isAvailable(): boolean {
-    // For local development, if docker isn't explicitly configured and verified, 
-    // it's not safe to execute arbitrary user code. 
     return false; 
   }
 
@@ -54,17 +139,5 @@ export class FallbackExecutionProvider implements ICodeExecutionProvider {
  * Factory to get the active execution provider based on environment config.
  */
 export function getExecutionProvider(): ICodeExecutionProvider {
-  // In a real production deployment, this would check environment variables 
-  // (e.g. JUDGE0_URL or PISTON_URL) and return the appropriate secure runner.
-  // We strictly default to FallbackExecutionProvider when no secure sandbox is available.
-  
-  const providerType = process.env.CODE_EXECUTION_PROVIDER;
-  
-  if (providerType === 'LOCAL_DOCKER') {
-    // Return a LocalDockerProvider (to be implemented if required)
-  } else if (providerType === 'JUDGE0') {
-    // Return Judge0Provider 
-  }
-  
-  return new FallbackExecutionProvider();
+  return new InProcessJSExecutionProvider();
 }

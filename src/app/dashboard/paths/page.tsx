@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Loader2, Map, Compass, BookOpen, Briefcase, GraduationCap } from 'lucide-react';
+import Link from 'next/link';
 
 export default function CareerPathsHub() {
   const [domains, setDomains] = useState<any[]>([]);
@@ -69,9 +70,11 @@ export default function CareerPathsHub() {
               </div>
             </CardContent>
             <div className="p-6 pt-0 mt-auto">
-              <Button className="w-full" variant="outline">
-                Explore Domain
-              </Button>
+              <Link href={`/dashboard/paths/${domain.slug}`} className="w-full">
+                <Button className="w-full" variant="outline">
+                  Explore Domain
+                </Button>
+              </Link>
             </div>
           </Card>
         ))}

@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Bell, UserCircle } from 'lucide-react';
 import Link from 'next/link';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
   const session = await auth();
@@ -63,12 +64,14 @@ export default async function DashboardLayout({ children }: { children: ReactNod
               <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">AI Ready</span>
             </div>
             
+            <ThemeToggle />
+            
             <Link href="/dashboard/notifications" className="relative p-2 rounded-full hover:bg-muted/80 transition-colors text-muted-foreground hover:text-foreground">
               <Bell className="w-5 h-5" />
               <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-destructive ring-2 ring-background" />
             </Link>
             
-            <Link href="/settings" className="flex items-center gap-2 pl-2">
+            <Link href="/dashboard/settings" className="flex items-center gap-2 pl-2">
               <div className="text-right hidden lg:block">
                 <div className="text-sm font-semibold leading-tight text-foreground">{userName}</div>
                 <div className="text-xs text-muted-foreground font-medium">Pro Member</div>

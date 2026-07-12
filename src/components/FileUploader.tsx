@@ -36,7 +36,8 @@ export function FileUploader({ onExtractionComplete }: FileUploaderProps) {
       });
 
       if (!res.ok) {
-        throw new Error('Extraction failed');
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || `Extraction failed (${res.status})`);
       }
 
       const data = await res.json();
@@ -47,9 +48,9 @@ export function FileUploader({ onExtractionComplete }: FileUploaderProps) {
         onExtractionComplete(data);
       }, 1000);
 
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      setStatus('Error occurred during upload or extraction.');
+      setStatus(error.message || 'Error occurred during upload or extraction.');
     } finally {
       setIsUploading(false);
     }

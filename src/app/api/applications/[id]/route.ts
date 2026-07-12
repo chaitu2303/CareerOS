@@ -66,3 +66,30 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     return NextResponse.json({ error: 'Failed to update application' }, { status: 500 });
   }
 }
+
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const { id } = await params;
+    const session = await auth();
+    const user = session?.user;
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const dbUser = await prisma.user.findUnique({ where: { email: user.email! } });
+    if (!dbUser) return NextResponse.json({ error: 'User not found' }, { status: 404 });
+
+    const existing = await prisma.application.findFirst({
+      where: { id, userId: dbUser.id }
+    });
+
+    if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+
+    await prisma.application.delete({
+      where: { id }
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('[DELETE /api/applications/[id]]', error);
+    return NextResponse.json({ error: 'Failed to delete application' }, { status: 500 });
+  }
+}

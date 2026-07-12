@@ -67,12 +67,12 @@ export function ProfileWorkspace({ initialProfile }: ProfileWorkspaceProps) {
       setIsUpdating(false);
     }
   };
-  
+
   // Filter facts based on search term
   const filterFacts = (facts: CareerFact[], keys: string[]) => {
     if (!searchTerm) return facts;
     const term = searchTerm.toLowerCase();
-    return facts.filter(fact => 
+    return facts.filter(fact =>
       keys.some(key => fact[key] && String(fact[key]).toLowerCase().includes(term))
     );
   };
@@ -83,7 +83,7 @@ export function ProfileWorkspace({ initialProfile }: ProfileWorkspaceProps) {
 
   return (
     <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-6">
-      
+
       {/* Header & Global Actions */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
@@ -93,8 +93,8 @@ export function ProfileWorkspace({ initialProfile }: ProfileWorkspaceProps) {
         <div className="flex items-center gap-3 w-full md:w-auto">
           <div className="relative flex-1 md:w-64">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <input 
-              type="text" 
+            <input
+              type="text"
               placeholder="Search facts..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -116,13 +116,13 @@ export function ProfileWorkspace({ initialProfile }: ProfileWorkspaceProps) {
           <p className="text-sm text-muted-foreground">Your profile is {profile.completenessScore}% complete.</p>
         </div>
         <div className="w-16 h-16 rounded-full border-4 border-primary/20 flex items-center justify-center relative">
-           {/* In a real app we'd use SVG circle for progress */}
-           <span className="font-bold text-primary">{profile.completenessScore}%</span>
+          {/* In a real app we'd use SVG circle for progress */}
+          <span className="font-bold text-primary">{profile.completenessScore}%</span>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
+
         {/* Left Column */}
         <div className="space-y-6 lg:col-span-1">
           {/* Basics */}
@@ -162,7 +162,7 @@ export function ProfileWorkspace({ initialProfile }: ProfileWorkspaceProps) {
 
         {/* Right Column */}
         <div className="space-y-6 lg:col-span-2">
-          
+
           {/* Experience */}
           <div className="bg-card border rounded-xl p-5 shadow-sm">
             <div className="flex justify-between items-center mb-6">
@@ -183,7 +183,7 @@ export function ProfileWorkspace({ initialProfile }: ProfileWorkspaceProps) {
                   </div>
                   <p className="text-sm font-medium mb-2">{exp.company}</p>
                   <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2 group-hover:line-clamp-none transition-all">{exp.description}</p>
-                  
+
                   <div className="mt-4 pt-3 border-t flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity">
                     <div className="text-[10px] text-muted-foreground">
                       {exp.provenance ? `Extracted via ${exp.provenance.extractionMethod}` : 'Manually created'}

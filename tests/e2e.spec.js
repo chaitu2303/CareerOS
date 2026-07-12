@@ -106,6 +106,7 @@ test.describe('CareerOS Production E2E Tests', () => {
 
   test('Onboarding Resume Extraction (PDF)', async ({ page }) => {
     test.setTimeout(60000);
+    await page.context().clearCookies();
     const pdfUserEmail = `pdf_user_${Date.now()}@example.com`;
     
     // 1. Signup a fresh user
@@ -117,11 +118,12 @@ test.describe('CareerOS Production E2E Tests', () => {
 
     // 2. Walk through onboarding to Resume Import
     await page.waitForURL('**/onboarding', { timeout: 30000 });
-    await page.getByRole('button', { name: 'Continue' }).click(); // BASIC_PROFILE
+    await page.locator('button:has-text("Get Started")').click(); // WELCOME
+    await page.locator('button:has-text("Continue")').click(); // BASIC_PROFILE
     await page.getByText('Software Engineering').click(); // DOMAIN
     await page.getByLabel('Target Job Title').fill('Frontend Developer');
     await page.getByLabel('Career Goal').fill('Build great UIs');
-    await page.getByRole('button', { name: 'Continue' }).click(); // TARGET_ROLE
+    await page.locator('button:has-text("Continue")').click(); // TARGET_ROLE
     
     // 3. File Upload
     // We expect a file input element

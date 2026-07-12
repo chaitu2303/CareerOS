@@ -5,12 +5,27 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Kanban, List, Clock, Filter, Plus, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 export default function ApplicationTrackerHub() {
   const [viewMode, setViewMode] = useState<'KANBAN' | 'TABLE' | 'TIMELINE'>('KANBAN');
   const [applications, setApplications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [draggedApp, setDraggedApp] = useState<string | null>(null);
+
+  // Create App state
+  const [createOpen, setCreateOpen] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [newApp, setNewApp] = useState({ company: '', roleTitle: '' });
 
   const statuses = ['SAVED', 'PREPARING', 'APPLIED', 'INTERVIEW', 'OFFER', 'REJECTED'];
 
@@ -52,6 +67,28 @@ export default function ApplicationTrackerHub() {
     if (draggedApp) {
       updateStatus(draggedApp, status);
       setDraggedApp(null);
+    }
+  };
+
+  const handleCreateApplication = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsCreating(true);
+    try {
+      const res = await fetch('/api/applications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newApp)
+      });
+      const data = await res.json();
+      if (data.application) {
+        setApplications(prev => [data.application, ...prev]);
+        setCreateOpen(false);
+        setNewApp({ company: '', roleTitle: '' });
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -99,7 +136,31 @@ export default function ApplicationTrackerHub() {
             </Button>
           </div>
           <Button variant="outline"><Filter className="w-4 h-4 mr-2" /> Filter</Button>
-          <Button><Plus className="w-4 h-4 mr-2" /> New Application</Button>
+          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+            <DialogTrigger render={<Button><Plus className="w-4 h-4 mr-2" /> New Application</Button>}>
+              New Application
+            </DialogTrigger>
+            <DialogContent>
+              <form onSubmit={handleCreateApplication}>
+                <DialogHeader>
+                  <DialogTitle>Add New Application</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="company">Company</Label>
+                    <Input id="company" value={newApp.company} onChange={e => setNewApp(p => ({ ...p, company: e.target.value }))} required />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="roleTitle">Role Title</Label>
+                    <Input id="roleTitle" value={newApp.roleTitle} onChange={e => setNewApp(p => ({ ...p, roleTitle: e.target.value }))} required />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button type="submit" disabled={isCreating}>Save</Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 

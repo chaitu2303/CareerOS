@@ -47,7 +47,7 @@ const navGroups = [
   {
     label: 'Job Search',
     items: [
-      { href: '/dashboard/applications/copilot', label: 'Application Copilot', icon: Zap },
+      { href: '/dashboard/copilot', label: 'Application Copilot', icon: Zap },
       { href: '/dashboard/applications', label: 'Application Tracker', icon: FileCog },
     ]
   },

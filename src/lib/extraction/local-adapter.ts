@@ -11,8 +11,8 @@ export class LocalExtractionAdapter implements ExtractionAdapter {
   async extract(buffer: Buffer, mimeType: string): Promise<string> {
     if (mimeType === 'application/pdf') {
       return this.extractPdf(buffer);
-    } 
-    
+    }
+
     if (mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || mimeType === 'application/msword') {
       const result = await mammoth.extractRawText({ buffer });
       return result.value;

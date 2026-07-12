@@ -12,7 +12,7 @@ export async function POST(req: Request) {
     }
 
     const { facts } = await req.json();
-    
+
     // Ensure a CareerProfile exists for the user
     const profile = await prisma.careerProfile.upsert({
       where: { userId: user.id! },
@@ -22,7 +22,7 @@ export async function POST(req: Request) {
         targetRole: facts.basics?.value?.targetRole,
         careerGoal: facts.basics?.value?.careerGoal,
       },
-      create: { 
+      create: {
         userId: user.id!,
         domain: facts.basics?.value?.domain,
         department: facts.basics?.value?.department,
@@ -39,14 +39,14 @@ export async function POST(req: Request) {
 
     // Transactional save
     await prisma.$transaction(async (tx) => {
-      
+
       // Save Skills
       if (facts.skills) {
         for (const skill of facts.skills) {
           const existing = await tx.skillFact.findFirst({
             where: { profileId: profile.id, name: skill.value }
           });
-          
+
           if (!existing) {
             const created = await tx.skillFact.create({
               data: {
@@ -76,13 +76,13 @@ export async function POST(req: Request) {
       if (facts.experience) {
         for (const exp of facts.experience) {
           const existing = await tx.experienceFact.findFirst({
-            where: { 
-              profileId: profile.id, 
+            where: {
+              profileId: profile.id,
               role: exp.value.role,
               company: exp.value.company
             }
           });
-          
+
           if (!existing) {
             const created = await tx.experienceFact.create({
               data: {
@@ -110,18 +110,18 @@ export async function POST(req: Request) {
           }
         }
       }
-      
+
       // Save Education
       if (facts.education) {
         for (const edu of facts.education) {
           const existing = await tx.educationFact.findFirst({
-            where: { 
-              profileId: profile.id, 
+            where: {
+              profileId: profile.id,
               degree: edu.value.degree,
               institution: edu.value.institution
             }
           });
-          
+
           if (!existing) {
             const created = await tx.educationFact.create({
               data: {

@@ -25,7 +25,7 @@ export default function AIControlCenter() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <Link href="/settings/ai">
+          <Link href="/dashboard/settings">
             <Button variant="outline" size="sm">
               Configure Model
             </Button>
