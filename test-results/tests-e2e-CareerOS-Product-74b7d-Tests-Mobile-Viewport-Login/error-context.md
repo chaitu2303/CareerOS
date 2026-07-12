@@ -7,7 +7,7 @@
 # Test info
 
 - Name: tests\e2e.spec.js >> CareerOS Production E2E Tests >> Mobile Viewport Login
-- Location: tests\e2e.spec.js:83:3
+- Location: tests\e2e.spec.js:93:3
 
 # Error details
 
@@ -117,69 +117,81 @@ Call log:
   78  |     expect(response.status()).toBe(200);
   79  |     const body = await response.json();
   80  |     expect(body.applications).toEqual([]);
-  81  |   });
-  82  | 
-  83  |   test('Mobile Viewport Login', async ({ page }) => {
-  84  |     test.setTimeout(60000);
-  85  |     await page.setViewportSize({ width: 375, height: 667 });
-  86  |     await page.goto(`${PROD_URL}/login`);
-> 87  |     await page.getByLabel('Email').fill(user1Email);
-      |                                    ^ Error: locator.fill: Test timeout of 60000ms exceeded.
-  88  |     await page.getByLabel('Password', { exact: false }).fill(password);
-  89  |     await page.getByRole('button', { name: 'Sign In', exact: true }).click();
-  90  |     // User 1 completed onboarding? If not, may land on /onboarding again
-  91  |     await page.waitForURL(/\/(dashboard|onboarding)/, { timeout: 30000 });
-  92  |     expect(page.url()).toMatch(/\/(dashboard|onboarding)/);
-  93  |   });
-  94  | 
-  95  |   test('Core Workflows & Tools', async ({ page }) => {
-  96  |     test.setTimeout(90000);
-  97  |     // Login as User 1
+  81  | 
+  82  |     // Sign out user 2 before next test
+  83  |     await page.goto(`${PROD_URL}/api/auth/signout`);
+  84  |     const signoutBtn2 = page.getByRole('button', { name: /sign out/i });
+  85  |     if (await signoutBtn2.isVisible({ timeout: 5000 }).catch(() => false)) {
+  86  |       await signoutBtn2.click();
+  87  |       await page.waitForLoadState('networkidle');
+  88  |     }
+  89  |     // Ensure clean slate for next test
+  90  |     await page.context().clearCookies();
+  91  |   });
+  92  | 
+  93  |   test('Mobile Viewport Login', async ({ page }) => {
+  94  |     test.setTimeout(60000);
+  95  |     // Clear any session leftover from previous test (serial mode shares browser context)
+  96  |     await page.context().clearCookies();
+  97  |     await page.setViewportSize({ width: 375, height: 667 });
   98  |     await page.goto(`${PROD_URL}/login`);
-  99  |     await page.getByLabel('Email').fill(user1Email);
+> 99  |     await page.getByLabel('Email').fill(user1Email);
+      |                                    ^ Error: locator.fill: Test timeout of 60000ms exceeded.
   100 |     await page.getByLabel('Password', { exact: false }).fill(password);
   101 |     await page.getByRole('button', { name: 'Sign In', exact: true }).click();
-  102 |     await page.waitForURL(/\/(dashboard|onboarding)/, { timeout: 30000 });
-  103 | 
-  104 |     // 1. Resume Creation (API)
-  105 |     const resumeRes = await page.request.post(`${PROD_URL}/api/resumes`, {
-  106 |       data: { mode: 'BLANK', title: 'E2E Blank Resume' }
-  107 |     });
-  108 |     expect(resumeRes.status()).toBe(200);
-  109 |     const createdResume = await resumeRes.json();
-  110 | 
-  111 |     // 2. Job Intelligence (Native Engine)
-  112 |     const jobRes = await page.request.post(`${PROD_URL}/api/jobs/analyze`, {
-  113 |       data: { text: 'Looking for a software engineer with Next.js experience.', sourceType: 'TEXT' }
-  114 |     });
-  115 |     expect(jobRes.status()).toBe(200);
-  116 | 
-  117 |     // 3. ATS Analysis (fetch version ID first)
-  118 |     const resumeDetailsRes = await page.request.get(`${PROD_URL}/api/resumes/${createdResume.resumeId}`);
-  119 |     expect(resumeDetailsRes.status()).toBe(200);
-  120 |     const resumeDetails = await resumeDetailsRes.json();
-  121 |     const versionId = resumeDetails.resume.versions[0].id;
+  102 |     // User 1 completed onboarding? If not, may land on /onboarding again
+  103 |     await page.waitForURL(/\/(dashboard|onboarding)/, { timeout: 30000 });
+  104 |     expect(page.url()).toMatch(/\/(dashboard|onboarding)/);
+  105 |   });
+  106 | 
+  107 |   test('Core Workflows & Tools', async ({ page }) => {
+  108 |     test.setTimeout(90000);
+  109 |     // Login as User 1
+  110 |     await page.goto(`${PROD_URL}/login`);
+  111 |     await page.getByLabel('Email').fill(user1Email);
+  112 |     await page.getByLabel('Password', { exact: false }).fill(password);
+  113 |     await page.getByRole('button', { name: 'Sign In', exact: true }).click();
+  114 |     await page.waitForURL(/\/(dashboard|onboarding)/, { timeout: 30000 });
+  115 | 
+  116 |     // 1. Resume Creation (API)
+  117 |     const resumeRes = await page.request.post(`${PROD_URL}/api/resumes`, {
+  118 |       data: { mode: 'BLANK', title: 'E2E Blank Resume' }
+  119 |     });
+  120 |     expect(resumeRes.status()).toBe(200);
+  121 |     const createdResume = await resumeRes.json();
   122 | 
-  123 |     const atsRes = await page.request.post(
-  124 |       `${PROD_URL}/api/resumes/${createdResume.resumeId}/versions/${versionId}/ats`
-  125 |     );
-  126 |     expect(atsRes.status()).toBe(200);
-  127 | 
-  128 |     // 4. Utility Studio Navigation
-  129 |     await page.goto(`${PROD_URL}/dashboard/tools`);
-  130 |     expect(page.url()).toContain('/dashboard/tools');
-  131 |   });
-  132 | 
-  133 |   test('Error States & Unauthorized Access', async ({ request, page }) => {
-  134 |     test.setTimeout(30000);
-  135 |     // 1. 401 on unauthenticated API access
-  136 |     const unauthorizedRes = await request.get(`${PROD_URL}/api/profile`);
-  137 |     expect(unauthorizedRes.status()).toBe(401);
-  138 | 
-  139 |     // 2. Dashboard redirects unauthenticated user to /login (302/200 after redirect)
-  140 |     const dashRes = await page.goto(`${PROD_URL}/dashboard`);
-  141 |     expect(page.url()).toContain('/login');
-  142 |   });
-  143 | });
+  123 |     // 2. Job Intelligence (Native Engine)
+  124 |     const jobRes = await page.request.post(`${PROD_URL}/api/jobs/analyze`, {
+  125 |       data: { text: 'Looking for a software engineer with Next.js experience.', sourceType: 'TEXT' }
+  126 |     });
+  127 |     expect(jobRes.status()).toBe(200);
+  128 | 
+  129 |     // 3. ATS Analysis (fetch version ID first)
+  130 |     const resumeDetailsRes = await page.request.get(`${PROD_URL}/api/resumes/${createdResume.resumeId}`);
+  131 |     expect(resumeDetailsRes.status()).toBe(200);
+  132 |     const resumeDetails = await resumeDetailsRes.json();
+  133 |     const versionId = resumeDetails.resume.versions[0].id;
+  134 | 
+  135 |     const atsRes = await page.request.post(
+  136 |       `${PROD_URL}/api/resumes/${createdResume.resumeId}/versions/${versionId}/ats`
+  137 |     );
+  138 |     expect(atsRes.status()).toBe(200);
+  139 | 
+  140 |     // 4. Utility Studio Navigation
+  141 |     await page.goto(`${PROD_URL}/dashboard/tools`);
+  142 |     expect(page.url()).toContain('/dashboard/tools');
+  143 |   });
   144 | 
+  145 |   test('Error States & Unauthorized Access', async ({ request, page }) => {
+  146 |     test.setTimeout(30000);
+  147 |     // 1. 401 on unauthenticated API access
+  148 |     const unauthorizedRes = await request.get(`${PROD_URL}/api/profile`);
+  149 |     expect(unauthorizedRes.status()).toBe(401);
+  150 | 
+  151 |     // 2. Dashboard redirects unauthenticated user to /login (302/200 after redirect)
+  152 |     const dashRes = await page.goto(`${PROD_URL}/dashboard`);
+  153 |     expect(page.url()).toContain('/login');
+  154 |   });
+  155 | });
+  156 | 
 ```

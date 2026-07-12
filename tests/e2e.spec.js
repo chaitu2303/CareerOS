@@ -78,10 +78,22 @@ test.describe('CareerOS Production E2E Tests', () => {
     expect(response.status()).toBe(200);
     const body = await response.json();
     expect(body.applications).toEqual([]);
+
+    // Sign out user 2 before next test
+    await page.goto(`${PROD_URL}/api/auth/signout`);
+    const signoutBtn2 = page.getByRole('button', { name: /sign out/i });
+    if (await signoutBtn2.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await signoutBtn2.click();
+      await page.waitForLoadState('networkidle');
+    }
+    // Ensure clean slate for next test
+    await page.context().clearCookies();
   });
 
   test('Mobile Viewport Login', async ({ page }) => {
     test.setTimeout(60000);
+    // Clear any session leftover from previous test (serial mode shares browser context)
+    await page.context().clearCookies();
     await page.setViewportSize({ width: 375, height: 667 });
     await page.goto(`${PROD_URL}/login`);
     await page.getByLabel('Email').fill(user1Email);
