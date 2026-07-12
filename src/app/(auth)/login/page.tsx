@@ -56,13 +56,9 @@ function LoginForm() {
     }
   };
 
-  if (status === 'loading') {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="text-muted-foreground">Loading...</div>
-      </div>
-    );
-  }
+  // Don't early-return on loading - always render the form so inputs are accessible.
+  // The useEffect above will redirect once session resolves.
+  const isSessionLoading = status === 'loading';
 
   return (
     <div className="flex h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
@@ -114,7 +110,7 @@ function LoginForm() {
           <button
             type="submit"
             data-testid="signin-button"
-            disabled={loading}
+            disabled={loading || isSessionLoading}
             className="w-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 p-2.5 rounded-lg hover:opacity-90 disabled:opacity-50 font-medium transition-opacity"
           >
             {loading ? 'Signing in...' : 'Sign In'}
