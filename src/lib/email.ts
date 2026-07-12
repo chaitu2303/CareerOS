@@ -1,6 +1,7 @@
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Only instantiate if the key exists to avoid build-time errors when the env var is missing
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
 const FROM_EMAIL = process.env.RESEND_FROM_EMAIL ?? 'onboarding@resend.dev';
 const APP_NAME = 'CareerOS';
@@ -9,7 +10,7 @@ const PROD_URL = process.env.NEXTAUTH_URL ?? 'https://careeros-iota.vercel.app';
 export async function sendPasswordResetEmail(to: string, resetToken: string): Promise<void> {
   const resetUrl = `${PROD_URL}/reset-password?token=${resetToken}`;
 
-  if (!process.env.RESEND_API_KEY) {
+  if (!resend) {
     // Graceful degradation: log reset URL if Resend is not configured
     console.warn('[email] RESEND_API_KEY not set. Password reset URL (DEV ONLY):');
     console.warn('[email] Reset URL:', resetUrl);
