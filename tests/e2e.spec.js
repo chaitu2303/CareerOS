@@ -106,12 +106,33 @@ test.describe('CareerOS Production E2E Tests', () => {
 
   test('Core Workflows & Tools', async ({ page }) => {
     test.setTimeout(90000);
+    // Clear any leftover session from previous test
+    await page.context().clearCookies();
+
     // Login as User 1
     await page.goto(`${PROD_URL}/login`);
     await page.getByLabel('Email').fill(user1Email);
     await page.getByLabel('Password', { exact: false }).fill(password);
     await page.getByRole('button', { name: 'Sign In', exact: true }).click();
     await page.waitForURL(/\/(dashboard|onboarding)/, { timeout: 30000 });
+
+    // Complete onboarding via API so dashboard routes are accessible
+    const onboardRes = await page.request.post(`${PROD_URL}/api/profile/save`, {
+      data: {
+        facts: {
+          basics: {
+            value: {
+              name: 'Test User',
+              domain: 'swe',
+              department: 'Software Engineering',
+              targetRole: 'Full Stack Developer',
+              careerGoal: 'Build great products'
+            }
+          }
+        }
+      }
+    });
+    expect(onboardRes.status()).toBe(200);
 
     // 1. Resume Creation (API)
     const resumeRes = await page.request.post(`${PROD_URL}/api/resumes`, {
@@ -137,19 +158,22 @@ test.describe('CareerOS Production E2E Tests', () => {
     );
     expect(atsRes.status()).toBe(200);
 
-    // 4. Utility Studio Navigation
+    // 4. Utility Studio Navigation (full page navigate — onboarding now complete)
     await page.goto(`${PROD_URL}/dashboard/tools`);
+    await page.waitForURL('**/dashboard/tools', { timeout: 15000 });
     expect(page.url()).toContain('/dashboard/tools');
   });
 
   test('Error States & Unauthorized Access', async ({ request, page }) => {
     test.setTimeout(30000);
-    // 1. 401 on unauthenticated API access
+    // 1. 401 on unauthenticated API access (fresh request context, no cookies by design)
     const unauthorizedRes = await request.get(`${PROD_URL}/api/profile`);
     expect(unauthorizedRes.status()).toBe(401);
 
-    // 2. Dashboard redirects unauthenticated user to /login (302/200 after redirect)
-    const dashRes = await page.goto(`${PROD_URL}/dashboard`);
+    // 2. Dashboard redirects unauthenticated user to /login
+    // Clear session from previous test first to ensure truly unauthenticated
+    await page.context().clearCookies();
+    await page.goto(`${PROD_URL}/dashboard`);
     expect(page.url()).toContain('/login');
   });
 });

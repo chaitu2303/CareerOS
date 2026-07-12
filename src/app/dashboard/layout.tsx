@@ -11,7 +11,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   const authUser = session?.user;
 
   if (!authUser) {
-    redirect('/');
+    redirect('/login');
   }
 
   // Fetch user data including gamification stats
