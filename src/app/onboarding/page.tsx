@@ -286,7 +286,7 @@ export default function OnboardingPage() {
                 <span className="text-sm font-semibold text-primary tracking-widest uppercase mb-4">Step 4</span>
                 <h2 className="text-3xl font-bold tracking-tight mb-4">Import your history.</h2>
                 <p className="text-muted-foreground mb-8 max-w-md">
-                  Upload your existing resume to instantly populate your Master Profile. We'll use AI to extract your experience and skills.
+                  Upload your existing resume to instantly populate your Master Profile. Our Native Intelligence engine will extract your experience and skills.
                 </p>
                 
                 <div className="max-w-md w-full">
