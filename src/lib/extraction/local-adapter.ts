@@ -1,14 +1,16 @@
 import { ExtractionAdapter } from './adapter';
 import mammoth from 'mammoth';
-
 export class LocalExtractionAdapter implements ExtractionAdapter {
   private async extractPdf(buffer: Buffer): Promise<string> {
-    if (typeof global !== 'undefined' && typeof (global as any).DOMMatrix === 'undefined') {
-      (global as any).DOMMatrix = class DOMMatrix {};
-    }
-    const pdfParse = require('pdf-parse');
-    const data = await pdfParse(buffer);
-    return data.text;
+    const PDFParser = require('pdf2json');
+    return new Promise((resolve, reject) => {
+      const pdfParser = new PDFParser(null, 1);
+      pdfParser.on('pdfParser_dataError', (errData: any) => reject(errData.parserError));
+      pdfParser.on('pdfParser_dataReady', () => {
+        resolve(pdfParser.getRawTextContent());
+      });
+      pdfParser.parseBuffer(buffer);
+    });
   }
 
   async extract(buffer: Buffer, mimeType: string): Promise<string> {
