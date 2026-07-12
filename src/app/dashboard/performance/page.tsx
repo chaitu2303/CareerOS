@@ -1,9 +1,53 @@
-'use client';
-
+import { auth } from '@/auth';
+import { prisma } from '@/lib/prisma';
+import { redirect } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Target, TrendingUp, AlertCircle, CheckCircle2, XCircle } from 'lucide-react';
+import { Target, AlertCircle, XCircle } from 'lucide-react';
+import { CareerReadinessEngine } from '@/lib/analytics/CareerReadinessEngine';
 
-export default function CareerPerformanceCenter() {
+export const dynamic = 'force-dynamic';
+
+export default async function CareerPerformanceCenter() {
+  const session = await auth();
+  const user = session?.user;
+  if (!user) redirect('/');
+
+  const dbUser = await prisma.user.findUnique({ where: { email: user.email! } });
+  if (!dbUser) redirect('/');
+
+  let snapshot = await prisma.careerReadinessSnapshot.findFirst({
+    where: { userId: dbUser.id },
+    orderBy: { createdAt: 'desc' }
+  });
+
+  let nextAction = "Continue preparing active applications.";
+  if (snapshot) {
+    nextAction = await CareerReadinessEngine.getNextBestAction(snapshot.id) || nextAction;
+  }
+
+  const dimensions = snapshot ? JSON.parse(snapshot.dimensionScores as string) : [];
+  
+  // Aggregate application funnel
+  const applications = await prisma.application.groupBy({
+    by: ['status'],
+    where: { userId: dbUser.id },
+    _count: true
+  });
+  
+  const funnel = {
+    total: 0,
+    assessments: 0,
+    interviews: 0,
+    offers: 0
+  };
+
+  applications.forEach(app => {
+    funnel.total += app._count;
+    if (app.status === 'ASSESSMENT') funnel.assessments += app._count;
+    if (app.status === 'INTERVIEW') funnel.interviews += app._count;
+    if (app.status === 'OFFER') funnel.offers += app._count;
+  });
+
   return (
     <div className="max-w-7xl mx-auto py-8 px-4 space-y-8">
       <div>
@@ -20,60 +64,53 @@ export default function CareerPerformanceCenter() {
                   <Target className="w-5 h-5 text-blue-600" />
                   Target Role Readiness
                 </CardTitle>
-                <p className="text-sm text-slate-500 mt-1">Software Engineer (Backend)</p>
+                <p className="text-sm text-slate-500 mt-1">{snapshot?.targetRole || 'Not Set'}</p>
               </div>
               <div className="text-right">
-                <span className="text-4xl font-bold text-slate-900">79%</span>
-                <p className="text-xs text-green-600 font-medium">+4% from last month</p>
+                <span className="text-4xl font-bold text-slate-900">
+                  {snapshot?.overallScore !== null ? `${snapshot?.overallScore}%` : 'N/A'}
+                </span>
               </div>
             </div>
           </CardHeader>
           <CardContent className="p-6 space-y-6">
-            <div className="space-y-4">
-              {/* Profile */}
-              <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="font-medium text-slate-700">Profile & Resume (25% weight)</span>
-                  <span className="text-slate-500">Strong</span>
-                </div>
-                <div className="w-full bg-slate-100 rounded-full h-2">
-                  <div className="bg-green-500 h-2 rounded-full" style={{ width: '90%' }}></div>
-                </div>
+            {!snapshot ? (
+              <div className="text-center p-6 bg-slate-50 border rounded-lg">
+                No readiness data available. Complete assessments to generate a snapshot.
               </div>
-              {/* Domain */}
-              <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="font-medium text-slate-700">Domain Competency (25% weight)</span>
-                  <span className="text-slate-500">Developing</span>
-                </div>
-                <div className="w-full bg-slate-100 rounded-full h-2">
-                  <div className="bg-yellow-500 h-2 rounded-full" style={{ width: '60%' }}></div>
-                </div>
+            ) : (
+              <div className="space-y-4">
+                {dimensions.map((dim: any, i: number) => (
+                  <div key={i}>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span className="font-medium text-slate-700">
+                        {dim.dimension} ({Math.round(dim.weight * 100)}% weight)
+                      </span>
+                      {dim.status === 'NOT_AVAILABLE' ? (
+                        <span className="text-slate-400 text-xs flex items-center gap-1">
+                          <XCircle className="w-3 h-3"/> Not Available
+                        </span>
+                      ) : dim.status === 'NO_EVIDENCE' ? (
+                        <span className="text-yellow-600 text-xs flex items-center gap-1">
+                          No Evidence
+                        </span>
+                      ) : (
+                        <span className="text-slate-500">{dim.score}%</span>
+                      )}
+                    </div>
+                    <div className="w-full bg-slate-100 rounded-full h-2">
+                      <div 
+                        className={`h-2 rounded-full ${dim.score >= 80 ? 'bg-green-500' : dim.score >= 50 ? 'bg-yellow-500' : 'bg-red-500'}`} 
+                        style={{ width: `${dim.score || 0}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                ))}
               </div>
-              {/* Coding */}
-              <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="font-medium text-slate-400">Coding Execution (25% weight)</span>
-                  <span className="text-slate-400 text-xs flex items-center gap-1"><XCircle className="w-3 h-3"/> Not Available</span>
-                </div>
-                <div className="w-full bg-slate-100 rounded-full h-2">
-                  <div className="bg-slate-200 h-2 rounded-full" style={{ width: '0%' }}></div>
-                </div>
-              </div>
-              {/* Interview */}
-              <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="font-medium text-slate-400">Mock Interview (25% weight)</span>
-                  <span className="text-slate-400 text-xs flex items-center gap-1"><XCircle className="w-3 h-3"/> AI Provider Required</span>
-                </div>
-                <div className="w-full bg-slate-100 rounded-full h-2">
-                  <div className="bg-slate-200 h-2 rounded-full" style={{ width: '0%' }}></div>
-                </div>
-              </div>
-            </div>
+            )}
             
-            <p className="text-xs text-slate-400 bg-slate-50 p-3 rounded border">
-              Readiness score is calculated using <strong className="text-slate-500">READINESS_V1</strong> based only on available platforms. Missing providers do not penalize your calculable score.
+            <p className="text-xs text-slate-400 bg-slate-50 p-3 rounded border mt-6">
+              Readiness score is calculated using <strong className="text-slate-500">{snapshot?.formulaVersion || 'READINESS_V1'}</strong> based only on available platforms. Missing providers do not penalize your calculable score.
             </p>
           </CardContent>
         </Card>
@@ -87,8 +124,7 @@ export default function CareerPerformanceCenter() {
               </CardTitle>
             </CardHeader>
             <CardContent className="p-4">
-              <p className="text-sm text-slate-700 font-medium">Complete a Domain Assessment to establish a baseline.</p>
-              <p className="text-xs text-slate-500 mt-2">Your Domain Competency lacks sufficient verified evidence.</p>
+              <p className="text-sm text-slate-700 font-medium">{nextAction}</p>
             </CardContent>
           </Card>
 
@@ -100,19 +136,19 @@ export default function CareerPerformanceCenter() {
               <div className="space-y-3 mt-4">
                 <div className="flex justify-between items-center text-sm border-b pb-2">
                   <span className="text-slate-600">Applications</span>
-                  <span className="font-semibold text-slate-900">12</span>
+                  <span className="font-semibold text-slate-900">{funnel.total}</span>
                 </div>
                 <div className="flex justify-between items-center text-sm border-b pb-2">
                   <span className="text-slate-600 pl-4">Assessments</span>
-                  <span className="font-semibold text-slate-900">3</span>
+                  <span className="font-semibold text-slate-900">{funnel.assessments}</span>
                 </div>
                 <div className="flex justify-between items-center text-sm border-b pb-2">
                   <span className="text-slate-600 pl-8">Interviews</span>
-                  <span className="font-semibold text-slate-900">1</span>
+                  <span className="font-semibold text-slate-900">{funnel.interviews}</span>
                 </div>
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-slate-600 pl-12 text-green-600">Offers</span>
-                  <span className="font-semibold text-green-700">0</span>
+                  <span className="font-semibold text-green-700">{funnel.offers}</span>
                 </div>
               </div>
             </CardContent>

@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/utils/supabase/server';
+import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
-import { analyzeResume } from '@/lib/ats/analyzer';
-import { getGroundedProfile } from '@/lib/resume/engine';
+import { CareerIntelligenceEngine } from '@/lib/intelligence/CareerIntelligenceEngine';
 import { ResumeContentSchema } from '@/lib/ai/resume-schema';
 import type { Prisma } from '@prisma/client';
 
@@ -14,8 +13,8 @@ export async function POST(
 ) {
   try {
     const { id: resumeId, versionId } = await params;
-    const supabase = await createClient();
-    const { data: { user: authUser } } = await supabase.auth.getUser();
+    const session = await auth();
+    const authUser = session?.user;
     if (!authUser) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const dbUser = await prisma.user.findUnique({ where: { email: authUser.email! } });
@@ -46,13 +45,9 @@ export async function POST(
     }
 
     const content = ResumeContentSchema.parse(version.content);
-    const profile = await getGroundedProfile(dbUser.id);
+    const profile = await CareerIntelligenceEngine.Grounding.getGroundedProfile(dbUser.id);
 
-    const result = await analyzeResume({
-      resume: content,
-      profile,
-      jobTarget
-    });
+    const result = await CareerIntelligenceEngine.ATS.analyze(content, profile, jobTarget);
 
     const report = await prisma.atsReport.create({
       data: {
@@ -67,8 +62,11 @@ export async function POST(
     });
 
     return NextResponse.json({ report });
-  } catch (e) {
+  } catch (e: any) {
     console.error('[POST /api/resumes/[id]/versions/[versionId]/ats]', e);
+    // if (e.message === 'AI_PROVIDER_UNAVAILABLE') {
+    //   return NextResponse.json({ error: 'AI features are currently disabled.' }, { status: 503 });
+    // }
     return NextResponse.json({ error: 'Failed to analyze resume' }, { status: 500 });
   }
 }

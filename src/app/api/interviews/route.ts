@@ -1,15 +1,21 @@
 import { NextResponse } from 'next/server';
 import { InterviewOrchestrator } from '@/lib/interview/InterviewOrchestrator';
+import { auth } from '@/auth';
 
 export async function POST(req: Request) {
   try {
-    // In a real app we'd get the user ID from the session. For testing we hardcode.
-    const userId = "test-user-id"; // We'll bypass auth for test setup or fetch the real user in the test.
+    const authSession = await auth();
+    const user = authSession?.user;
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await req.json();
     
-    const session = await InterviewOrchestrator.initializeSession(body.userId || userId, body);
+    const session = await InterviewOrchestrator.initializeSession(user.id!, body);
     return NextResponse.json({ session });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
+

@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma';
+import { isAiAvailable } from '@/lib/ai/gateway';
 
 export class CommandRouter {
   static async processCommand(userId: string, input: string) {
@@ -35,7 +36,7 @@ export class CommandRouter {
     }
     
     if (rawInput.includes('interview')) {
-      const hasAiProvider = !!(process.env.OPENAI_API_KEY);
+      const hasAiProvider = isAiAvailable();
       if (!hasAiProvider) {
         return {
           action: 'ERROR',
@@ -58,7 +59,7 @@ export class CommandRouter {
     }
 
     // Natural Language Fallback (Simulated if AI available, else error)
-    const hasAiProvider = !!(process.env.OPENAI_API_KEY);
+    const hasAiProvider = isAiAvailable();
     if (hasAiProvider) {
       return { action: 'AI_PROCESSED', message: `Interpreting intent for: "${input}"` };
     } else {

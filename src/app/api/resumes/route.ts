@@ -3,7 +3,7 @@
  * POST /api/resumes        → create new resume (from scratch or from profile)
  */
 import { NextResponse } from 'next/server';
-import { createClient } from '@/utils/supabase/server';
+import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { buildResumeFromProfile } from '@/lib/resume/engine';
 import type { GroundedProfile } from '@/lib/resume/engine';
@@ -12,8 +12,8 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const supabase = await createClient();
-    const { data: { user: authUser } } = await supabase.auth.getUser();
+    const session = await auth();
+    const authUser = session?.user;
     if (!authUser) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const dbUser = await prisma.user.findUnique({ where: { email: authUser.email! } });
@@ -34,14 +34,14 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    const supabase = await createClient();
-    const { data: { user: authUser } } = await supabase.auth.getUser();
+    const session = await auth();
+    const authUser = session?.user;
     if (!authUser) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     let dbUser = await prisma.user.findUnique({ where: { email: authUser.email! } });
     if (!dbUser) {
       dbUser = await prisma.user.create({
-        data: { id: authUser.id, email: authUser.email!, name: authUser.user_metadata?.full_name }
+        data: { id: authUser.id!, email: authUser.email!, name: authUser.name }
       });
     }
 

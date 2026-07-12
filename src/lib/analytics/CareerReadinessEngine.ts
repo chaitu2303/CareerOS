@@ -1,10 +1,11 @@
 import { prisma } from '@/lib/prisma';
+import { isAiAvailable } from '@/lib/ai/gateway';
 
 export class CareerReadinessEngine {
   static async calculateReadiness(userId: string, targetRole: string) {
     // Determine context availability
     const hasSecureCodeExecution = false;
-    const hasAiProvider = !!(process.env.OPENAI_API_KEY);
+    const hasAiProvider = isAiAvailable();
     const isCodingRole = targetRole.toLowerCase().includes('engineer') || targetRole.toLowerCase().includes('developer');
 
     // Define weights deterministically based on role type

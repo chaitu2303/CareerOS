@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { Upload, File as FileIcon, X, Loader2, CheckCircle } from 'lucide-react';
-import { createClient } from '@/utils/supabase/client';
 import { Button } from './ui/button';
 
 interface FileUploaderProps {
@@ -13,8 +12,6 @@ export function FileUploader({ onExtractionComplete }: FileUploaderProps) {
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [status, setStatus] = useState<string>('');
-
-  const supabase = createClient();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -27,43 +24,15 @@ export function FileUploader({ onExtractionComplete }: FileUploaderProps) {
 
     try {
       setIsUploading(true);
-      setStatus('Authenticating...');
-
-      const { data: { user } } = await supabase.auth.getUser();
+      setStatus('Uploading and Extracting...');
       
-      // If no user exists, we'd normally prompt login.
-      // For this MVP onboarding step, we assume the user is signed in or anonymous session.
-      if (!user) {
-        setStatus('Error: Please sign in first.');
-        setIsUploading(false);
-        return;
-      }
-
-      setStatus('Uploading securely...');
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
-      const filePath = `${user.id}/uploads/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('resumes')
-        .upload(filePath, file);
-
-      if (uploadError) {
-        throw uploadError;
-      }
-
-      setStatus('Extracting text on server...');
+      const formData = new FormData();
+      formData.append('file', file);
       
-      // Call our secure extraction API
+      // Call our secure extraction API which handles upload and AI parsing
       const res = await fetch('/api/extract', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          filePath,
-          originalFilename: file.name,
-          mimeType: file.type,
-          sizeBytes: file.size
-        }),
+        body: formData,
       });
 
       if (!res.ok) {
@@ -72,8 +41,7 @@ export function FileUploader({ onExtractionComplete }: FileUploaderProps) {
 
       const data = await res.json();
       
-      setStatus('Extraction complete! AI parsing next...');
-      // In a full implementation, we'd then call the AI parsing endpoint.
+      setStatus('Extraction complete! Loading verification...');
       
       setTimeout(() => {
         onExtractionComplete(data);

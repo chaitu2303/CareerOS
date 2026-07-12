@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { createClient } from '@/utils/supabase/server';
+import { auth } from '@/auth';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
@@ -40,8 +40,8 @@ export default async function JobAnalysisPage({
 }) {
   const { id } = await params;
 
-  const supabase = await createClient();
-  const { data: { user: authUser } } = await supabase.auth.getUser();
+  const session = await auth();
+  const authUser = session?.user;
   if (!authUser) redirect('/');
 
   const job = await prisma.jobTarget.findUnique({
@@ -270,7 +270,7 @@ export default async function JobAnalysisPage({
           {/* CTA Actions */}
           <div className="bg-card border rounded-2xl p-5 space-y-3">
             <h3 className="font-semibold text-sm">Next Steps</h3>
-            <Link href="/dashboard/resumes/new" className="w-full">
+            <Link href={`/dashboard/resumes/new?jobId=${job.id}`} className="w-full">
               <Button className="w-full gap-2 justify-start" variant="default">
                 <Target className="w-4 h-4" />
                 Generate Tailored Resume

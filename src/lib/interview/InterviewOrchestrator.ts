@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma';
+import { isAiAvailable } from '@/lib/ai/gateway';
 
 export interface AgentDecision {
   nextAction: 'ASK_NEW' | 'FOLLOW_UP' | 'CHALLENGE' | 'TRANSITION' | 'END_INTERVIEW';
@@ -44,8 +45,9 @@ export class InterviewOrchestrator {
   /**
    * Processes a candidate's answer and orchestrates the multi-agent response.
    */
-  static async processTurn(sessionId: string, candidateAnswer: string) {
+  static async processTurn(sessionId: string, candidateAnswer: string, userId: string) {
     const session = await prisma.interviewSession.findUnique({ where: { id: sessionId } });
+    if (session && session.userId !== userId) throw new Error('Unauthorized');
     if (!session) throw new Error('Session not found');
 
     // 1. EVALUATOR AGENT (Privately evaluates the answer)
@@ -54,7 +56,7 @@ export class InterviewOrchestrator {
     // 4. INTERVIEWER AGENT (Generates next professional question)
 
     // Check if an AI provider is available.
-    const aiProviderAvailable = process.env.OPENAI_API_KEY || process.env.ANTHROPIC_API_KEY;
+    const aiProviderAvailable = isAiAvailable();
     if (!aiProviderAvailable) {
       // In compliance with M10 boundary: "Do not fake a successful AI interview if no functioning model provider is available."
       throw new Error('AI_UNAVAILABLE');

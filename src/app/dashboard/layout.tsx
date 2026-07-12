@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import { createClient } from '@/utils/supabase/server';
+import { auth } from '@/auth';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { Sidebar } from '@/components/layout/Sidebar';
@@ -7,8 +7,8 @@ import { Bell, UserCircle } from 'lucide-react';
 import Link from 'next/link';
 
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
-  const supabase = await createClient();
-  const { data: { user: authUser } } = await supabase.auth.getUser();
+  const session = await auth();
+  const authUser = session?.user;
 
   if (!authUser) {
     redirect('/');
@@ -22,6 +22,10 @@ export default async function DashboardLayout({ children }: { children: ReactNod
       xpRecord: true,
     }
   });
+
+  if (!dbUser?.onboardingCompleted) {
+    redirect('/onboarding');
+  }
 
   const streak = dbUser?.streakRecord?.currentStreak ?? 0;
   const xp = dbUser?.xpRecord?.totalXp ?? 0;

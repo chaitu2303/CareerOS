@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma';
+import { isAiAvailable } from '@/lib/ai/gateway';
 
 export class SimulationOrchestrator {
   /**
@@ -10,7 +11,7 @@ export class SimulationOrchestrator {
     // We generate a blueprint. For a real app, this reads from the DomainPack or JobTarget.
     // For this example, we'll construct a mock blueprint.
     const hasSecureCodeExecution = false; // We know this is unconfigured right now.
-    const hasAiProvider = !!(process.env.OPENAI_API_KEY || process.env.ANTHROPIC_API_KEY);
+    const hasAiProvider = isAiAvailable();
 
     // E.g., for Software Engineer: Aptitude -> Coding -> Technical Interview -> HR
     const roundsData = [

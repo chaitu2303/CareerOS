@@ -5,20 +5,54 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CareerOS Copilot</title>
   <style>
-    body { font-family: -apple-system, sans-serif; width: 320px; padding: 16px; margin: 0; }
-    .header { font-weight: 600; font-size: 16px; margin-bottom: 12px; }
-    .btn { display: block; width: 100%; padding: 8px; background: #000; color: #fff; text-align: center; border-radius: 6px; cursor: pointer; border: none; margin-bottom: 8px; }
+    body { font-family: -apple-system, sans-serif; width: 340px; padding: 16px; margin: 0; background: #fafafa; color: #111; }
+    .header { font-weight: 700; font-size: 18px; margin-bottom: 4px; display: flex; align-items: center; justify-content: space-between; }
+    .subtitle { font-size: 12px; color: #666; margin-bottom: 16px; }
+    .btn { display: block; width: 100%; padding: 10px; background: #000; color: #fff; text-align: center; border-radius: 6px; cursor: pointer; border: none; font-weight: 500; margin-bottom: 8px; transition: background 0.2s; }
+    .btn:hover { background: #333; }
     .btn:disabled { background: #ccc; cursor: not-allowed; }
-    .status { font-size: 12px; color: #666; margin-bottom: 16px; }
+    .btn-secondary { background: #fff; color: #000; border: 1px solid #ccc; }
+    .btn-secondary:hover { background: #f0f0f0; }
+    .status-box { padding: 12px; background: #fff; border: 1px solid #eee; border-radius: 8px; margin-bottom: 16px; font-size: 13px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .hidden { display: none !important; }
+    .tag { display: inline-block; padding: 2px 6px; background: #e0f2fe; color: #0369a1; border-radius: 4px; font-size: 11px; margin-right: 4px; margin-bottom: 4px; }
+    .tag.missing { background: #fee2e2; color: #b91c1c; }
+    .score-circle { width: 40px; height: 40px; border-radius: 50%; background: #000; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; }
+    .flex-row { display: flex; align-items: center; gap: 12px; }
   </style>
 </head>
 <body>
-  <div class="header">CareerOS Application Copilot</div>
-  <div id="auth-status" class="status">Checking authentication...</div>
-  
-  <button id="btn-detect" class="btn" disabled>Detect Application Fields</button>
-  <button id="btn-autofill" class="btn" disabled>Auto-fill Safe Fields</button>
-  <button id="btn-undo" class="btn" style="background:#fff; color:#000; border:1px solid #ccc" disabled>Undo Fill</button>
+  <div class="header">
+    CareerOS Copilot
+  </div>
+  <div class="subtitle" id="user-info">Checking authentication...</div>
+
+  <div id="unauth-view" class="hidden">
+    <div class="status-box">
+      You are not logged in. Please log in to CareerOS to use the Copilot.
+    </div>
+    <a href="https://careeros-iota.vercel.app/login" target="_blank" class="btn">Log In</a>
+  </div>
+
+  <div id="main-view" class="hidden">
+    <div id="analysis-box" class="status-box hidden">
+      <div class="flex-row" style="margin-bottom: 12px;">
+        <div class="score-circle" id="job-score">--</div>
+        <div>
+          <div style="font-weight: 600;" id="job-title">Loading Job...</div>
+          <div style="font-size: 11px; color: #666;" id="job-company"></div>
+        </div>
+      </div>
+      <div style="margin-bottom: 8px; font-weight: 600;">Missing Skills:</div>
+      <div id="missing-skills-container"></div>
+    </div>
+
+    <button id="btn-analyze" class="btn">Analyze Job</button>
+    <button id="btn-autofill" class="btn btn-secondary hidden">Autofill Profile Facts</button>
+    <button id="btn-track" class="btn btn-secondary hidden">Save to Tracker</button>
+    
+    <div id="action-status" style="font-size: 12px; color: #666; text-align: center; margin-top: 12px;"></div>
+  </div>
 
   <script src="popup.js"></script>
 </body>

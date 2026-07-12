@@ -1,4 +1,4 @@
-import { createClient } from '@/utils/supabase/server';
+import { auth } from '@/auth';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
@@ -38,8 +38,8 @@ function ReadinessBar({ score, label }: { score: number; label: string }) {
 }
 
 export default async function DashboardHomePage() {
-  const supabase = await createClient();
-  const { data: { user: authUser } } = await supabase.auth.getUser();
+  const session = await auth();
+  const authUser = session?.user;
   if (!authUser) redirect('/');
 
   const dbUser = await prisma.user.findUnique({
@@ -114,7 +114,7 @@ export default async function DashboardHomePage() {
           </div>
           <p className="text-muted-foreground max-w-2xl text-balance">
             {hasProfile
-              ? `You are preparing for Software Engineering roles. Your profile is ${completenessScore}% complete.`
+              ? `You are preparing for ${profile.targetRole || profile.domain || 'Software Engineering'} roles. Your profile is ${completenessScore}% complete.`
               : "Welcome to your new Career Operating System. Let's build your verified profile."}
           </p>
         </div>
@@ -152,10 +152,10 @@ export default async function DashboardHomePage() {
                 <span>Next Best Action</span>
               </div>
               <h2 className="text-2xl sm:text-3xl font-bold mb-2 text-balance">
-                Complete your DBMS baseline assessment.
+                Complete your {profile?.domain === 'swe' ? 'Core Engineering' : profile?.domain || 'Baseline'} assessment.
               </h2>
               <p className="text-primary-foreground/80 mb-8 max-w-lg">
-                Your Job Intelligence scans show DBMS as a highly requested skill for your target roles, but you have no verified evidence yet.
+                Your Job Intelligence scans show this is a highly requested skill for {profile?.targetRole || 'your target roles'}, but you have no verified evidence yet.
               </p>
               <div className="flex flex-wrap items-center gap-4">
                 <Link href="/dashboard/assess">

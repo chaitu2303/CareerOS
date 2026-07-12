@@ -4,14 +4,14 @@
  * DELETE /api/resumes/[id]   → delete resume
  */
 import { NextResponse } from 'next/server';
-import { createClient } from '@/utils/supabase/server';
+import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
 
 async function getAuthUser() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const session = await auth();
+    const user = session?.user;
   return user;
 }
 

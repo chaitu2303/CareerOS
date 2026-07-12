@@ -21,6 +21,10 @@ function getActiveModel(): LanguageModel {
   return provider(activeModelName);
 }
 
+export function isAiAvailable(): boolean {
+  return process.env.AI_PROVIDER !== 'none' && !!(process.env.OPENAI_API_KEY || process.env.ANTHROPIC_API_KEY || process.env.LOCAL_AI_MODEL);
+}
+
 /**
  * Gateway for unstructured generation (text completions).
  */
@@ -28,6 +32,10 @@ export async function askGateway(
   prompt: string,
   options?: { systemPrompt?: string; maxTokens?: number }
 ): Promise<string> {
+  if (!isAiAvailable()) {
+    throw new Error('AI_PROVIDER_UNAVAILABLE');
+  }
+
   try {
     const { text } = await generateText({
       model: getActiveModel(),
@@ -37,6 +45,7 @@ export async function askGateway(
     });
     return text;
   } catch (err: any) {
+    if (err.message === 'AI_PROVIDER_UNAVAILABLE') throw err;
     console.error("Primary AI Gateway failed:", err.message);
     throw new Error(`AI Gateway Error: ${err.message}`);
   }
@@ -50,6 +59,10 @@ export async function extractEntities<T>(
   schema: z.ZodType<T>,
   options?: { systemPrompt?: string }
 ): Promise<T> {
+  if (!isAiAvailable()) {
+    throw new Error('AI_PROVIDER_UNAVAILABLE');
+  }
+
   try {
     const { object } = await generateObject({
       model: getActiveModel(),
@@ -59,6 +72,7 @@ export async function extractEntities<T>(
     });
     return object;
   } catch (err: any) {
+    if (err.message === 'AI_PROVIDER_UNAVAILABLE') throw err;
     console.error("Primary AI Gateway structured generation failed:", err.message);
     throw new Error(`AI Gateway Structured Generation Error: ${err.message}`);
   }

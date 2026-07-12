@@ -13,40 +13,55 @@ import {
 
 const navGroups = [
   {
-    label: 'Overview',
+    label: 'Career Identity',
     items: [
       { href: '/dashboard', label: 'Command Center', icon: LayoutDashboard, exact: true },
-    ]
-  },
-  {
-    label: 'Career',
-    items: [
-      { href: '/dashboard/profile', label: 'Career Profile', icon: UserCircle },
+      { href: '/dashboard/profile', label: 'Master Profile', icon: UserCircle },
       { href: '/dashboard/memory', label: 'Career Memory', icon: Database },
+      { href: '/dashboard/passport', label: 'Career Passport', icon: Compass },
     ]
   },
   {
-    label: 'Prepare',
-    items: [
-      { href: '/dashboard/resumes', label: 'Resume Studio', icon: FileText },
-      { href: '/dashboard/assess', label: 'Assessments', icon: MonitorCheck },
-      { href: '/dashboard/code', label: 'Coding Arena', icon: Code2 },
-      { href: '/dashboard/interview', label: 'Mock Interviews', icon: Brain },
-    ]
-  },
-  {
-    label: 'Opportunities',
+    label: 'Job Preparation',
     items: [
       { href: '/dashboard/jobs', label: 'Job Intelligence', icon: Briefcase },
-      { href: '/dashboard/applications', label: 'Applications', icon: Target },
+      { href: '/dashboard/resumes', label: 'Resume Studio', icon: FileText },
+      { href: '/dashboard/ats', label: 'ATS Analysis', icon: Target },
     ]
   },
   {
-    label: 'Progress',
+    label: 'Practice Arena',
+    items: [
+      { href: '/dashboard/assess', label: 'Assessments', icon: MonitorCheck },
+      { href: '/dashboard/code', label: 'Coding Arena', icon: Code2 },
+      { href: '/dashboard/learn', label: 'Department Practice', icon: BookOpen },
+    ]
+  },
+  {
+    label: 'Interview Lab',
+    items: [
+      { href: '/dashboard/interview', label: 'Mock Interviews', icon: Brain },
+      { href: '/dashboard/simulations', label: 'Recruitment Simulator', icon: Bot },
+    ]
+  },
+  {
+    label: 'Job Search',
+    items: [
+      { href: '/dashboard/applications/copilot', label: 'Application Copilot', icon: Zap },
+      { href: '/dashboard/applications', label: 'Application Tracker', icon: FileCog },
+    ]
+  },
+  {
+    label: 'Growth',
     items: [
       { href: '/dashboard/analytics', label: 'Performance', icon: BarChart3 },
-      { href: '/dashboard/achievements', label: 'Achievements', icon: Trophy },
-      { href: '/dashboard/learn', label: 'Learning Paths', icon: BookOpen },
+      { href: '/dashboard/achievements', label: 'Streaks & Badges', icon: Trophy },
+    ]
+  },
+  {
+    label: 'Utility Studio',
+    items: [
+      { href: '/dashboard/tools', label: 'Utility Studio', icon: Settings },
     ]
   }
 ];

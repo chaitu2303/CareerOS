@@ -4,7 +4,7 @@
  * Never fabricates — edits only what already exists.
  */
 import { NextResponse } from 'next/server';
-import { createClient } from '@/utils/supabase/server';
+import { auth } from '@/auth';
 import { extractEntities } from '@/lib/ai/gateway';
 import { ResumeContentSchema } from '@/lib/ai/resume-schema';
 import type { ResumeContent } from '@/lib/ai/resume-schema';
@@ -13,8 +13,8 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   try {
-    const supabase = await createClient();
-    const { data: { user: authUser } } = await supabase.auth.getUser();
+    const session = await auth();
+    const authUser = session?.user;
     if (!authUser) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const { command, content } = await req.json() as { command: string; content: ResumeContent };

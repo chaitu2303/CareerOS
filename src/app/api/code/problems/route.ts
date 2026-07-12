@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { getCurrentUser } from '@/lib/auth/session';
+import { auth } from '@/auth';
 
 export async function GET(req: Request) {
   try {
-    const user = await getCurrentUser();
+    const session = await auth();
+    const user = session?.user;
     
     // We fetch problems
     const problems = await prisma.codingProblem.findMany({
@@ -18,7 +19,7 @@ export async function GET(req: Request) {
         timeLimit: true,
         memoryLimit: true,
         progress: user ? {
-          where: { userId: user.id }
+          where: { userId: user.id! }
         } : false
       },
       orderBy: { createdAt: 'desc' }

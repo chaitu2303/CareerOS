@@ -1,6 +1,8 @@
 import { prisma } from '@/lib/prisma';
 import crypto from 'crypto';
 
+import { isAiAvailable } from '@/lib/ai/gateway';
+
 export class MissionEngine {
   static async generateDailyMissions(userId: string) {
     const todayStr = new Date().toISOString().split('T')[0];
@@ -19,7 +21,7 @@ export class MissionEngine {
 
     // Capability check mapping
     const hasSecureCodeExecution = false; 
-    const hasAiProvider = !!(process.env.OPENAI_API_KEY);
+    const hasAiProvider = isAiAvailable();
 
     const tasks = [
       { id: crypto.randomUUID(), label: 'Complete 1 Aptitude Assessment', type: 'ASSESSMENT', completed: false, status: 'AVAILABLE' }

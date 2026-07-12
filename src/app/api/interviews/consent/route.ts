@@ -1,10 +1,19 @@
 import { NextResponse } from 'next/server';
+import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 
 export async function POST(req: Request) {
   try {
+    const authSession = await auth();
+    const user = authSession?.user;
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     const body = await req.json();
     const { sessionId, cameraAccess, micAccess, tabMonitoring, fullscreenMonitoring, clipboardLogging, videoRecording, audioRecording, visualSignals } = body;
+
+    
+    const session = await prisma.interviewSession.findUnique({ where: { id: sessionId } });
+    if (!session || session.userId !== user.id!) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     if (!sessionId) {
       return NextResponse.json({ error: 'Missing session ID' }, { status: 400 });

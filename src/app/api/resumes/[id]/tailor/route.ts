@@ -4,7 +4,7 @@
  * Body: { jobId, mode: 'CONSERVATIVE' | 'BALANCED' | 'AGGRESSIVE' }
  */
 import { NextResponse } from 'next/server';
-import { createClient } from '@/utils/supabase/server';
+import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { tailorResumeToJob } from '@/lib/resume/engine';
 import type { TailoringMode, GroundedProfile } from '@/lib/resume/engine';
@@ -19,8 +19,8 @@ export async function POST(
 ) {
   try {
     const { id: resumeId } = await params;
-    const supabase = await createClient();
-    const { data: { user: authUser } } = await supabase.auth.getUser();
+    const session = await auth();
+    const authUser = session?.user;
     if (!authUser) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const dbUser = await prisma.user.findUnique({ where: { email: authUser.email! } });
@@ -119,8 +119,11 @@ export async function POST(
       company: job.company,
     });
 
-  } catch (e) {
+  } catch (e: any) {
     console.error('[POST /api/resumes/[id]/tailor]', e);
+    if (e.message === 'AI_PROVIDER_UNAVAILABLE') {
+      return NextResponse.json({ error: 'AI features are currently disabled.' }, { status: 503 });
+    }
     return NextResponse.json({ error: 'Tailoring failed' }, { status: 500 });
   }
 }

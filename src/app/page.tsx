@@ -9,7 +9,7 @@ export default function Home() {
         One intelligent platform for Resume Building, Job Tailoring, ATS Optimization, AI Video Interviews, and Application Copilot.
       </p>
       
-      <Link href="/onboarding">
+      <Link href="/login">
         <Button size="lg" className="text-lg px-8">Get Started</Button>
       </Link>
     </main>

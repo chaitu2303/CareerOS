@@ -1,12 +1,67 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Kanban, List, Clock, Filter, Plus } from 'lucide-react';
+import { Kanban, List, Clock, Filter, Plus, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 export default function ApplicationTrackerHub() {
   const [viewMode, setViewMode] = useState<'KANBAN' | 'TABLE' | 'TIMELINE'>('KANBAN');
+  const [applications, setApplications] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [draggedApp, setDraggedApp] = useState<string | null>(null);
+
+  const statuses = ['SAVED', 'PREPARING', 'APPLIED', 'INTERVIEW', 'OFFER', 'REJECTED'];
+
+  useEffect(() => {
+    fetch('/api/applications')
+      .then(res => res.json())
+      .then(data => {
+        setApplications(data.applications || []);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error(err);
+        setLoading(false);
+      });
+  }, []);
+
+  const updateStatus = async (id: string, newStatus: string) => {
+    setApplications(prev => prev.map(app => app.id === id ? { ...app, status: newStatus } : app));
+    try {
+      await fetch(`/api/applications/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus })
+      });
+    } catch (e) {
+      console.error('Failed to update status', e);
+    }
+  };
+
+  const handleDragStart = (id: string) => {
+    setDraggedApp(id);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (status: string) => {
+    if (draggedApp) {
+      updateStatus(draggedApp, status);
+      setDraggedApp(null);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex h-[50vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto py-8 px-4 h-full flex flex-col">
@@ -50,45 +105,57 @@ export default function ApplicationTrackerHub() {
 
       {viewMode === 'KANBAN' && (
         <div className="flex-1 flex gap-4 overflow-x-auto pb-4">
-          {/* Mock Kanban Columns */}
-          {['SAVED', 'PREPARING', 'APPLIED', 'INTERVIEW', 'OFFER'].map(status => (
-            <div key={status} className="bg-slate-50 border rounded-lg min-w-[320px] p-4 flex flex-col">
-              <h3 className="font-semibold text-slate-700 mb-4 flex justify-between items-center">
-                {status}
-                <span className="bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full text-xs">
-                  {status === 'APPLIED' ? 2 : 1}
-                </span>
-              </h3>
-              
-              <div className="flex-1 space-y-3">
-                {status === 'APPLIED' && (
-                  <Card className="shadow-sm border-l-4 border-l-blue-500 cursor-pointer hover:shadow-md transition-shadow">
-                    <CardContent className="p-4">
-                      <h4 className="font-semibold">Software Engineer</h4>
-                      <p className="text-sm text-slate-500">TechCorp Inc.</p>
-                      <div className="mt-4 flex gap-2">
-                        <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">Applied 2d ago</span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
+          {statuses.map(status => {
+            const columnApps = applications.filter(app => app.status === status);
+            return (
+              <div 
+                key={status} 
+                className="bg-slate-50 border rounded-lg min-w-[320px] p-4 flex flex-col"
+                onDragOver={handleDragOver}
+                onDrop={() => handleDrop(status)}
+              >
+                <h3 className="font-semibold text-slate-700 mb-4 flex justify-between items-center">
+                  {status}
+                  <span className="bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full text-xs">
+                    {columnApps.length}
+                  </span>
+                </h3>
                 
-                {status === 'PREPARING' && (
-                  <Card className="shadow-sm border-l-4 border-l-yellow-500 cursor-pointer hover:shadow-md transition-shadow">
-                    <CardContent className="p-4">
-                      <h4 className="font-semibold">Frontend Developer</h4>
-                      <p className="text-sm text-slate-500">DesignStudio</p>
-                      <div className="mt-4 flex flex-col gap-2">
-                        <p className="text-xs text-yellow-700 bg-yellow-50 p-2 rounded">
-                          <strong>Next Action:</strong> Tailor your resume before applying.
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
+                <div className="flex-1 space-y-3 min-h-[100px]">
+                  {columnApps.map(app => (
+                    <Card 
+                      key={app.id} 
+                      className={`shadow-sm border-l-4 cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow ${
+                        status === 'APPLIED' ? 'border-l-blue-500' : 
+                        status === 'PREPARING' ? 'border-l-yellow-500' : 
+                        status === 'OFFER' ? 'border-l-green-500' : 
+                        status === 'REJECTED' ? 'border-l-red-500' : 'border-l-slate-400'
+                      }`}
+                      draggable
+                      onDragStart={() => handleDragStart(app.id)}
+                    >
+                      <Link href={`/dashboard/applications/${app.id}`} className="block focus:outline-none">
+                        <CardContent className="p-4 hover:bg-slate-50/50 transition-colors">
+                          <h4 className="font-semibold">{app.roleTitle}</h4>
+                          <p className="text-sm text-slate-500">{app.company}</p>
+                          <div className="mt-4 flex gap-2">
+                            <span className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded">
+                              Updated {new Date(app.updatedAt).toLocaleDateString()}
+                            </span>
+                          </div>
+                        </CardContent>
+                      </Link>
+                    </Card>
+                  ))}
+                  {columnApps.length === 0 && (
+                    <div className="text-center text-sm text-muted-foreground mt-8 opacity-50">
+                      Drop here
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
       
@@ -100,3 +167,4 @@ export default function ApplicationTrackerHub() {
     </div>
   );
 }
+

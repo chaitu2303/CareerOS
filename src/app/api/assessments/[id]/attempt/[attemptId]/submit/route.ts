@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { getCurrentUser } from '@/lib/auth/session';
+import { auth } from '@/auth';
 import { EvaluationService } from '@/lib/assessment/EvaluationService';
 
 export async function POST(req: Request, context: any) {
   try {
-    const user = await getCurrentUser();
+    const session = await auth();
+    const user = session?.user;
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const params = await context.params;
@@ -15,7 +16,7 @@ export async function POST(req: Request, context: any) {
       where: { id: params.attemptId }
     });
 
-    if (!attempt || attempt.userId !== user.id) {
+    if (!attempt || attempt.userId !== user.id!) {
       return NextResponse.json({ error: 'Attempt not found or unauthorized' }, { status: 404 });
     }
 

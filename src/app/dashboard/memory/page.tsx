@@ -1,19 +1,19 @@
-import { createClient } from '@/utils/supabase/server';
+import { auth } from '@/auth';
 import prisma from '@/lib/prisma';
 import { redirect } from 'next/navigation';
 import { FileText, Database, Calendar, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default async function CareerMemoryPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const session = await auth();
+  const user = session?.user;
 
   if (!user) {
     redirect('/');
   }
 
   const uploadedFiles = await prisma.uploadedFile.findMany({
-    where: { userId: user.id },
+    where: { userId: user.id! },
     orderBy: { createdAt: 'desc' },
   });
 

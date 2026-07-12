@@ -167,6 +167,39 @@ export class EvaluationService {
       }
     });
 
+    // Award XP
+    try {
+      const { XpEngine } = await import('@/lib/gamification/XpEngine');
+      await XpEngine.awardXp(
+        attempt.userId,
+        'ASSESSMENT_COMPLETED',
+        'ASSESSMENT_ARENA',
+        attemptId,
+        { score: totalScore, accuracy }
+      );
+    } catch (e) {
+      console.error('Failed to award XP:', e);
+    }
+
+    // Update Streak
+    try {
+      const { StreakEngine } = await import('@/lib/gamification/StreakEngine');
+      await StreakEngine.processActivity(attempt.userId);
+    } catch (e) {
+      console.error('Failed to update streak:', e);
+    }
+
+    // Update Readiness
+    try {
+      const user = await prisma.user.findUnique({ where: { id: attempt.userId }, include: { careerProfile: true } });
+      if (user?.careerProfile?.targetRole) {
+        const { CareerReadinessEngine } = await import('@/lib/analytics/CareerReadinessEngine');
+        await CareerReadinessEngine.calculateReadiness(attempt.userId, user.careerProfile.targetRole);
+      }
+    } catch (e) {
+      console.error('Failed to update readiness:', e);
+    }
+
     return evaluationResult;
   }
 }

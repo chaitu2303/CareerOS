@@ -11,11 +11,22 @@ export default function AssessmentArena() {
   const [assessments, setAssessments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [userDomain, setUserDomain] = useState<string>('General');
+
   useEffect(() => {
     fetch('/api/assessments')
       .then(res => res.json())
       .then(data => {
-        setAssessments(data.assessments || []);
+        let sortedAssessments = data.assessments || [];
+        if (data.userDomain && data.userDomain !== 'General') {
+          sortedAssessments.sort((a: any, b: any) => {
+            const aMatch = a.domain === data.userDomain || a.department === data.userDomain ? 1 : 0;
+            const bMatch = b.domain === data.userDomain || b.department === data.userDomain ? 1 : 0;
+            return bMatch - aMatch;
+          });
+          setUserDomain(data.userDomain);
+        }
+        setAssessments(sortedAssessments);
         setLoading(false);
       })
       .catch(err => {
@@ -40,7 +51,7 @@ export default function AssessmentArena() {
         </div>
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Assessment Arena</h1>
-          <p className="text-muted-foreground mt-1">Practice, test, and prove your skills to earn badges.</p>
+          <p className="text-muted-foreground mt-1">Practice, test, and prove your skills in {userDomain === 'swe' ? 'Software Engineering' : userDomain} to earn badges.</p>
         </div>
       </div>
 

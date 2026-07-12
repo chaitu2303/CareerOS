@@ -1,4 +1,4 @@
-import { createClient } from '@/utils/supabase/server';
+import { auth } from '@/auth';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
@@ -8,11 +8,14 @@ import { Button } from '@/components/ui/button';
 export const dynamic = 'force-dynamic';
 
 export default async function JobsIndexPage() {
-  const supabase = await createClient();
-  const { data: { user: authUser } } = await supabase.auth.getUser();
+  const session = await auth();
+  const authUser = session?.user;
   if (!authUser) redirect('/');
 
-  const dbUser = await prisma.user.findUnique({ where: { email: authUser.email! } });
+  const dbUser = await prisma.user.findUnique({ 
+    where: { email: authUser.email! },
+    include: { careerProfile: true }
+  });
 
   const jobs = dbUser
     ? await prisma.jobTarget.findMany({
@@ -35,7 +38,7 @@ export default async function JobsIndexPage() {
             <h1 className="text-3xl font-bold tracking-tight">Job Intelligence</h1>
           </div>
           <p className="text-muted-foreground text-balance">
-            Analyze job descriptions against your Master Profile to get actionable insights.
+            Analyze {dbUser?.careerProfile?.targetRole || 'job descriptions'} against your Master Profile to get actionable insights.
           </p>
         </div>
         <div>

@@ -3,7 +3,6 @@
  * Handles: profile → resume generation, tailoring, truth-guard validation
  * All operations are grounded against verified Master Career Profile facts.
  */
-import { extractEntities, askGateway } from '@/lib/ai/gateway';
 import { TailoringResultSchema, ResumeContentSchema, type ResumeContent, type TailoringChange } from '@/lib/ai/resume-schema';
 
 
@@ -218,38 +217,49 @@ export async function tailorResumeToJob(params: {
     verifiedCertifications: groundedProfile.certifications.map(c => ({ id: c.id, name: c.name })),
   };
 
-  const prompt = `You are a professional resume writer operating under strict truthfulness rules.
+  // Native Tailoring Rule Engine
+  const changes: TailoringChange[] = [];
+  const rejectedRequirements: string[] = [];
 
-TAILORING MODE: ${mode}
-${modeInstructions[mode]}
+  // 1. Check required skills
+  for (const reqSkill of jobRequirements.requiredSkills) {
+    const hasSkill = groundedProfile.skills.some(s => s.name.toLowerCase() === reqSkill.toLowerCase());
+    if (!hasSkill) {
+      rejectedRequirements.push(reqSkill);
+    }
+  }
 
-TARGET JOB:
-- Title: ${jobRequirements.jobTitle}
-- Company: ${jobRequirements.company}
-- Required Skills: ${jobRequirements.requiredSkills.join(', ')}
-- Preferred Skills: ${jobRequirements.preferredSkills.join(', ')}
-- Keywords: ${jobRequirements.keywords.join(', ')}
-- Responsibilities: ${jobRequirements.responsibilities.slice(0, 5).join('; ')}
+  // 2. Simple bullet re-ordering based on keywords
+  const keywords = jobRequirements.keywords.map(k => k.toLowerCase());
+  for (const section of resumeContent.sections) {
+    if (section.type === 'experience') {
+      const data = (section as any).data;
+      if (data && data.items) {
+        for (const item of data.items) {
+          if (item.bullets) {
+            // Find bullets with matching keywords
+            item.bullets.forEach((bullet: string, idx: number) => {
+              const lowerBullet = bullet.toLowerCase();
+              if (keywords.some(k => lowerBullet.includes(k))) {
+                changes.push({
+                  sectionType: 'experience',
+                  itemId: item.id,
+                  field: `bullets[${idx}]`,
+                  original: bullet,
+                  proposed: `${bullet} (Highlighted for ${jobRequirements.company})`,
+                  reason: 'Matches target job keywords.',
+                  sourceFactId: item.sourceFactId,
+                  isFabricated: false,
+                });
+              }
+            });
+          }
+        }
+      }
+    }
+  }
 
-VERIFIED CAREER FACTS (these are the ONLY facts you may use):
-${JSON.stringify(profileFactIndex, null, 2)}
-
-CURRENT RESUME CONTENT:
-${JSON.stringify(resumeContent.sections, null, 2)}
-
-STRICT RULES:
-1. NEVER add a skill, experience, tool, or certification that is not in VERIFIED CAREER FACTS.
-2. Every bullet improvement must be grounded in existing content — improve the wording, not the facts.
-3. For any job requirement you CANNOT satisfy from verified facts, list it in rejectedRequirements.
-4. For each change, set sourceFactId to the relevant verified fact's id.
-5. Set isFabricated: true if you detect the change cannot be grounded (this should be 0 — it is a self-check).
-6. Provide a clear human-readable reason for every change.
-
-Generate a structured list of proposed changes. Do not return the full resume, only the diffs.`;
-
-  const tailoring = await extractEntities(prompt, TailoringResultSchema, {
-    systemPrompt: 'You are a truthful resume intelligence engine. Never fabricate facts.',
-  });
+  const tailoring = { changes, rejectedRequirements };
 
   // ── Truth Guard Pass ──────────────────────────────────────────────────────
   // Post-process: flag any proposed skill insertions not in verified profile

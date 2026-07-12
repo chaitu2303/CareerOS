@@ -3,7 +3,7 @@
  * Retrieve a specific version's content for restoration.
  */
 import { NextResponse } from 'next/server';
-import { createClient } from '@/utils/supabase/server';
+import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
@@ -14,8 +14,8 @@ export async function GET(
 ) {
   try {
     const { id: resumeId, versionId } = await params;
-    const supabase = await createClient();
-    const { data: { user: authUser } } = await supabase.auth.getUser();
+    const session = await auth();
+    const authUser = session?.user;
     if (!authUser) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const dbUser = await prisma.user.findUnique({ where: { email: authUser.email! } });

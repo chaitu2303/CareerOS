@@ -1,4 +1,4 @@
-import { createClient } from '@/utils/supabase/server';
+import { auth } from '@/auth';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
@@ -8,8 +8,8 @@ import { Button } from '@/components/ui/button';
 export const dynamic = 'force-dynamic';
 
 export default async function ResumesPage() {
-  const supabase = await createClient();
-  const { data: { user: authUser } } = await supabase.auth.getUser();
+  const session = await auth();
+  const authUser = session?.user;
   if (!authUser) redirect('/');
 
   const dbUser = await prisma.user.findUnique({ where: { email: authUser.email! } });
@@ -66,7 +66,7 @@ export default async function ResumesPage() {
           <div className="max-w-md px-4">
             <h2 className="text-2xl font-bold mb-2">No resumes yet</h2>
             <p className="text-muted-foreground text-balance">
-              Create your first ATS-optimized resume. Let the CareerOS AI Engine extract and format your experiences automatically.
+              Create your first ATS-optimized resume. Let the CareerOS Native Intelligence Engine extract and format your experiences automatically.
             </p>
           </div>
           <div className="flex flex-wrap justify-center gap-4">
@@ -88,7 +88,7 @@ export default async function ResumesPage() {
               <div className="w-5 h-5 shrink-0 bg-warning/20 rounded-full flex items-center justify-center mt-0.5">
                 <span className="text-warning text-xs font-bold">!</span>
               </div>
-              <p>Complete your <Link href="/onboarding" className="font-bold underline hover:text-warning transition-colors">Career Profile</Link> to unlock AI-powered profile-based generation.</p>
+              <p>Complete your <Link href="/onboarding" className="font-bold underline hover:text-warning transition-colors">Career Profile</Link> to unlock Native Intelligence profile-based generation.</p>
             </div>
           )}
         </div>
@@ -105,7 +105,7 @@ export default async function ResumesPage() {
             </div>
             <div>
               <div className="text-sm font-bold text-foreground mb-1">Create New Resume</div>
-              <div className="text-xs text-muted-foreground font-medium">Blank or via AI Engine</div>
+              <div className="text-xs text-muted-foreground font-medium">Blank or via Native Engine</div>
             </div>
           </Link>
 

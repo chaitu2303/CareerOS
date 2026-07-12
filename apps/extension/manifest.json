@@ -1,14 +1,22 @@
 {
   "manifest_version": 3,
-  "name": "CareerOS AI Job Application Copilot",
+  "name": "CareerOS Job Application Copilot",
   "version": "1.0.0",
-  "description": "AI-assisted job application copilot. Securely auto-fill applications, draft custom answers, and track jobs.",
+  "description": "Native Intelligence job application copilot. Securely auto-fill verified facts, analyze job match, and track applications.",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
   "permissions": [
     "activeTab",
     "storage",
     "scripting"
   ],
   "host_permissions": [
+    "https://careeros-iota.vercel.app/*",
+    "http://localhost:3000/*",
     "https://*.workday.com/*",
     "https://*.greenhouse.io/*",
     "https://*.lever.co/*"

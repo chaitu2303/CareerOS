@@ -32,6 +32,22 @@ function NewResumeContent() {
         setError(data.error ?? 'Failed to create resume');
         return;
       }
+      
+      const jobId = searchParams.get('jobId');
+      if (jobId) {
+        // Automatically tailor the newly created resume
+        const tailorRes = await fetch(`/api/resumes/${data.resumeId}/tailor`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ jobId, mode: 'BALANCED' })
+        });
+        
+        if (tailorRes.ok) {
+          const tailorData = await tailorRes.json();
+          // Navigate to the tailored version directly if you want, or just the base resume
+        }
+      }
+
       router.push(`/dashboard/resumes/${data.resumeId}`);
     } catch {
       setError('Network error. Please try again.');
@@ -69,7 +85,7 @@ function NewResumeContent() {
             <div>
               <div className="font-semibold text-sm">From Master Profile</div>
               <div className="text-xs text-muted-foreground mt-0.5">
-                AI generates a complete resume from your verified career facts.
+                Native Intelligence Engine generates a complete resume from your verified career facts.
               </div>
             </div>
           </button>

@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
 import { CodingService } from '@/lib/coding/CodingService';
-import { getCurrentUser } from '@/lib/auth/session';
+import { auth } from '@/auth';
 
 export async function POST(req: Request) {
   try {
-    const user = await getCurrentUser();
+    const session = await auth();
+    const user = session?.user;
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const payload = await req.json();
@@ -14,7 +15,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    const result = await CodingService.submitCode(user.id, problemId, language, code);
+    const result = await CodingService.submitCode(user.id!, problemId, language, code);
 
     return NextResponse.json({ result });
   } catch (error: any) {

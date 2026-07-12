@@ -1,16 +1,17 @@
 import { NextResponse } from 'next/server';
 import { AssessmentService } from '@/lib/assessment/AssessmentService';
-import { getCurrentUser } from '@/lib/auth/session';
+import { auth } from '@/auth';
 
 export async function POST(req: Request, context: any) {
   try {
-    const user = await getCurrentUser();
+    const session = await auth();
+    const user = session?.user;
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const params = await context.params;
     const { mode = 'PRACTICE' } = await req.json();
 
-    const attempt = await AssessmentService.startAttempt(user.id, params.id, mode);
+    const attempt = await AssessmentService.startAttempt(user.id!, params.id, mode);
 
     return NextResponse.json({ attempt });
   } catch (error: any) {

@@ -12,7 +12,7 @@ export function createClient() {
       },
       storage: {
         from: (bucket: string) => ({
-          upload: async () => ({ data: null, error: new Error('Storage unavailable') })
+          upload: async () => ({ data: null, error: new Error('Storage unavailable (Unauthorized)') })
         })
       }
     } as any;

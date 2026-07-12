@@ -1,16 +1,16 @@
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
+import NextAuth from 'next-auth';
+import { authConfig } from './auth.config';
+import { NextResponse } from 'next/server';
 
-// Simple in-memory store for staging rate limiting.
-// In production, this would use Redis/Upstash.
+const { auth } = NextAuth(authConfig);
+
 const rateLimitMap = new Map<string, { count: number, resetAt: number }>();
 
-export function proxy(request: NextRequest) {
-  // Only rate limit API routes
-  if (request.nextUrl.pathname.startsWith('/api/')) {
-    const ip = request.headers.get('x-forwarded-for') ?? '127.0.0.1';
+export default auth((req) => {
+  if (req.nextUrl.pathname.startsWith('/api/')) {
+    const ip = req.headers.get('x-forwarded-for') ?? '127.0.0.1';
     const now = Date.now();
-    const windowMs = 60 * 1000; // 1 minute
+    const windowMs = 60 * 1000;
     const maxRequests = 100;
 
     let record = rateLimitMap.get(ip);
@@ -30,8 +30,8 @@ export function proxy(request: NextRequest) {
   }
 
   return NextResponse.next();
-}
+});
 
 export const config = {
-  matcher: '/api/:path*',
-}
+  matcher: ['/((?!_next/static|_next/image|.*\\.png$).*)'],
+};

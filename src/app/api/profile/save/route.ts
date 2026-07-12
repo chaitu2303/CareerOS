@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/utils/supabase/server';
+import { auth } from '@/auth';
 import prisma from '@/lib/prisma';
 
 export async function POST(req: Request) {
   try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const session = await auth();
+    const user = session?.user;
 
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -15,9 +15,26 @@ export async function POST(req: Request) {
     
     // Ensure a CareerProfile exists for the user
     const profile = await prisma.careerProfile.upsert({
-      where: { userId: user.id },
-      update: {},
-      create: { userId: user.id }
+      where: { userId: user.id! },
+      update: {
+        domain: facts.basics?.value?.domain,
+        department: facts.basics?.value?.department,
+        targetRole: facts.basics?.value?.targetRole,
+        careerGoal: facts.basics?.value?.careerGoal,
+      },
+      create: { 
+        userId: user.id!,
+        domain: facts.basics?.value?.domain,
+        department: facts.basics?.value?.department,
+        targetRole: facts.basics?.value?.targetRole,
+        careerGoal: facts.basics?.value?.careerGoal,
+      }
+    });
+
+    // Mark onboarding complete
+    await prisma.user.update({
+      where: { id: user.id! },
+      data: { onboardingCompleted: true }
     });
 
     // Transactional save

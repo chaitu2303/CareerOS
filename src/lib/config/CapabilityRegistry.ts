@@ -1,8 +1,10 @@
 export type CapabilityState = 'AVAILABLE' | 'LIMITED' | 'UNAVAILABLE' | 'DISABLED';
 
+import { isAiAvailable } from '@/lib/ai/gateway';
+
 export class CapabilityRegistry {
   static getAiProviderStatus(): CapabilityState {
-    if (process.env.OPENAI_API_KEY) return 'AVAILABLE';
+    if (isAiAvailable()) return 'AVAILABLE';
     return 'UNAVAILABLE'; // By default, fail safely
   }
 

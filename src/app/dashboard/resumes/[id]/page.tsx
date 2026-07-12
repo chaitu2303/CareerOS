@@ -1,5 +1,5 @@
 import { notFound, redirect } from 'next/navigation';
-import { createClient } from '@/utils/supabase/server';
+import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { ResumeStudio } from '@/components/resume/ResumeStudio';
 
@@ -12,8 +12,8 @@ export default async function ResumeEditorPage({
 }) {
   const { id } = await params;
 
-  const supabase = await createClient();
-  const { data: { user: authUser } } = await supabase.auth.getUser();
+  const session = await auth();
+  const authUser = session?.user;
   if (!authUser) redirect('/');
 
   const dbUser = await prisma.user.findUnique({ where: { email: authUser.email! } });
