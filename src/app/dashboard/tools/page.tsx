@@ -100,7 +100,7 @@ export default function UtilityStudio() {
       page.drawText(`Converted PDF from ${file.name}\n\n(Full docx extraction requires a backend or heavy WASM module,\nthis is a local fallback)`, { x: 50, y: 700, size: 15 });
       
       const pdfBytes = await pdfDoc.save();
-      const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+      const blob = new Blob([pdfBytes as any], { type: 'application/pdf' });
       const url = URL.createObjectURL(blob);
       setResultUrl(url);
       setOutputFileName(file.name.replace(/\.[^/.]+$/, "") + ".pdf");
