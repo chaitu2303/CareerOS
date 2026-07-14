@@ -31,8 +31,8 @@ export default async function AchievementsPage() {
   ];
   const certificates = dbUser.certificates;
   const events = xpRecord?.events?.length ? xpRecord.events : [
-    { id: '1', activity: 'Completed Valid Palindrome', xpEarned: 50, createdAt: new Date() },
-    { id: '2', activity: 'Aptitude Test Score: 3/3', xpEarned: 100, createdAt: new Date() }
+    { id: '1', activity: 'Completed Valid Palindrome', description: null, xpEarned: 50, createdAt: new Date() },
+    { id: '2', activity: 'Aptitude Test Score: 3/3', description: null, xpEarned: 100, createdAt: new Date() }
   ];
 
   return (
