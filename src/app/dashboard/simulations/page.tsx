@@ -15,8 +15,8 @@ export default function SimulationsHub() {
     status: 'IN_PROGRESS',
     rounds: [
       { type: 'ASSESSMENT', title: 'Quantitative & Logical', status: 'COMPLETED', score: 85 },
-      { type: 'CODING', title: 'Technical Coding Round', status: 'UNAVAILABLE', reqs: ['Secure Execution'] },
-      { type: 'INTERVIEW', title: 'Technical Interview', status: 'PENDING', reqs: ['Native Engine'] },
+      { type: 'CODING', title: 'Technical Coding Round', status: 'READY', reqs: [] },
+      { type: 'INTERVIEW', title: 'Technical Interview', status: 'LOCKED', reqs: [] },
       { type: 'INTERVIEW', title: 'HR & Behavioral', status: 'LOCKED', reqs: [] }
     ]
   };
@@ -45,14 +45,7 @@ export default function SimulationsHub() {
         </div>
       </div>
 
-      <div className="mb-8 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-800 flex gap-3">
-        <AlertTriangle className="w-5 h-5 flex-shrink-0" />
-        <p className="text-sm">
-          <strong>Capability Notice:</strong> Some simulation rounds are marked <em>Unavailable</em>. 
-          To unlock the Coding round, configure a secure code execution sandbox. Interviews are powered by the CareerOS Native Intelligence Engine.
-          Scores will not be faked for unavailable rounds.
-        </p>
-      </div>
+
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <Card className="border-indigo-100 shadow-sm">

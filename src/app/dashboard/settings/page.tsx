@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { User, Bell, Shield, LogOut } from 'lucide-react';
+import ResumeUpload from './ResumeUpload';
 
 export const dynamic = 'force-dynamic';
 
@@ -55,6 +56,8 @@ export default async function SettingsPage() {
               <Button>Save Changes</Button>
             </CardContent>
           </Card>
+
+          <ResumeUpload />
 
           <Card>
             <CardHeader>

@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Brain, Send, Video, Mic, CheckCircle, Loader2, StopCircle } from 'lucide-react';
+import { Brain, Send, Video, Mic, CheckCircle, Loader2, StopCircle, VideoOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function MockInterviewPage() {
@@ -13,6 +13,30 @@ export default function MockInterviewPage() {
   const [input, setInput] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [streamActive, setStreamActive] = useState(false);
+
+  useEffect(() => {
+    let stream: MediaStream | null = null;
+    const startWebcam = async () => {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+        setStreamActive(true);
+      } catch (err) {
+        console.error("Failed to get media stream", err);
+      }
+    };
+    startWebcam();
+
+    return () => {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, []);
 
   const handleSend = () => {
     if (!input.trim()) return;
@@ -58,8 +82,34 @@ export default function MockInterviewPage() {
 
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-10 flex-1 min-h-0 pb-10">
         
-        {/* Chat Area */}
-        <div className="xl:col-span-8 flex flex-col bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] relative overflow-hidden h-[600px]">
+        {/* Chat & Video Area */}
+        <div className="xl:col-span-8 flex flex-col space-y-6">
+          {/* Webcam View */}
+          <div className="relative bg-black border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] aspect-video overflow-hidden group flex items-center justify-center">
+            {streamActive ? (
+              <video 
+                ref={videoRef} 
+                autoPlay 
+                playsInline 
+                muted 
+                className="w-full h-full object-cover -scale-x-100"
+              />
+            ) : (
+              <div className="text-white flex flex-col items-center">
+                <VideoOff className="w-12 h-12 mb-2 opacity-50" />
+                <p className="font-bold uppercase tracking-widest text-sm opacity-50">Webcam Not Found</p>
+              </div>
+            )}
+            <div className="absolute bottom-4 left-4 bg-black/50 backdrop-blur-sm border-2 border-white px-3 py-1 text-white font-bold text-sm flex items-center gap-2">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+              </span>
+              REC
+            </div>
+          </div>
+
+          <div className="flex flex-col bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] relative overflow-hidden h-[400px]">
           <div className="absolute top-0 left-0 right-0 bg-[#ffe500] border-b-4 border-black px-6 py-3 flex items-center justify-between z-10">
             <h3 className="font-black uppercase flex items-center gap-2">
               <Video className="w-5 h-5" /> Live AI Interviewer
@@ -126,6 +176,7 @@ export default function MockInterviewPage() {
               <Send className="w-5 h-5 md:mr-2" /> <span className="hidden md:inline">Send</span>
             </Button>
           </div>
+        </div>
         </div>
 
         {/* Sidebar Feedback */}

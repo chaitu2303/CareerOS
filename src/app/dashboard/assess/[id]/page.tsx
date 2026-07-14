@@ -103,7 +103,7 @@ export default function AssessmentInstructions() {
               <ul className="list-disc list-inside text-sm mt-1 space-y-1">
                 <li>Duration: {assessment.durationMinutes ? `${assessment.durationMinutes} minutes` : 'Untimed'}</li>
                 <li>Difficulty: {assessment.difficulty}</li>
-                <li>Topics: {assessment.topicCoverage.join(', ')}</li>
+                <li>Topics: {Array.isArray(assessment.topicCoverage) ? assessment.topicCoverage.join(', ') : (assessment.topicCoverage || 'General')}</li>
               </ul>
             </div>
           </div>

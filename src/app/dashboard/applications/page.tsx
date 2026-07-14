@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Kanban, List, Clock, Filter, Plus, Loader2 } from 'lucide-react';
+import { Kanban, List, Clock, Filter, Plus, Loader2, Link2, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import {
@@ -26,6 +26,10 @@ export default function ApplicationTrackerHub() {
   const [createOpen, setCreateOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [newApp, setNewApp] = useState({ company: '', roleTitle: '' });
+
+  const [syncOpen, setSyncOpen] = useState(false);
+  const [jobUrl, setJobUrl] = useState('');
+  const [isSyncing, setIsSyncing] = useState(false);
 
   const statuses = ['SAVED', 'PREPARING', 'APPLIED', 'INTERVIEW', 'OFFER', 'REJECTED'];
 
@@ -92,6 +96,36 @@ export default function ApplicationTrackerHub() {
     }
   };
 
+  const handleSyncJob = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!jobUrl) return;
+    
+    setIsSyncing(true);
+    // Simulate scraping a job from a URL (e.g. LinkedIn, Indeed)
+    setTimeout(async () => {
+      try {
+        const hostname = new URL(jobUrl).hostname;
+        const platform = hostname.includes('linkedin') ? 'LinkedIn' : hostname.includes('indeed') ? 'Indeed' : 'Job Board';
+        
+        const res = await fetch('/api/applications', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ company: platform, roleTitle: 'Imported Role' })
+        });
+        const data = await res.json();
+        if (data.application) {
+          setApplications(prev => [data.application, ...prev]);
+          setSyncOpen(false);
+          setJobUrl('');
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsSyncing(false);
+      }
+    }, 1500);
+  };
+
   if (loading) {
     return (
       <div className="flex h-[50vh] items-center justify-center">
@@ -101,62 +135,67 @@ export default function ApplicationTrackerHub() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto py-8 px-4 h-full flex flex-col">
-      <div className="flex items-center justify-between mb-8">
+    <div className="max-w-7xl mx-auto py-8 px-4 h-full flex flex-col min-h-[calc(100vh-4rem)]">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 border-b-8 border-black pb-8 shrink-0">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Application Tracker</h1>
-          <p className="text-muted-foreground mt-1">Manage your complete job search pipeline.</p>
+          <h1 className="text-4xl md:text-5xl font-black tracking-tighter uppercase">Application Tracker</h1>
+          <p className="font-bold text-lg mt-1 bg-[#ff90e8] text-black inline-block px-2 border-2 border-black rotate-1">Manage your complete job search pipeline.</p>
         </div>
         
-        <div className="flex gap-2">
-          <div className="flex bg-slate-100 p-1 rounded-md">
-            <Button 
-              variant={viewMode === 'KANBAN' ? 'secondary' : 'ghost'} 
-              size="sm" 
-              onClick={() => setViewMode('KANBAN')}
-            >
-              <Kanban className="w-4 h-4 mr-2" />
-              Board
-            </Button>
-            <Button 
-              variant={viewMode === 'TABLE' ? 'secondary' : 'ghost'} 
-              size="sm" 
-              onClick={() => setViewMode('TABLE')}
-            >
-              <List className="w-4 h-4 mr-2" />
-              List
-            </Button>
-            <Button 
-              variant={viewMode === 'TIMELINE' ? 'secondary' : 'ghost'} 
-              size="sm" 
-              onClick={() => setViewMode('TIMELINE')}
-            >
-              <Clock className="w-4 h-4 mr-2" />
-              Timeline
-            </Button>
-          </div>
-          <Button variant="outline"><Filter className="w-4 h-4 mr-2" /> Filter</Button>
-          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-            <DialogTrigger render={<Button><Plus className="w-4 h-4 mr-2" /> New Application</Button>}>
-              New Application
+        <div className="flex flex-wrap gap-2">
+          <Dialog open={syncOpen} onOpenChange={setSyncOpen}>
+            <DialogTrigger render={<Button className="h-12 px-6 rounded-none border-4 border-black bg-[#ffe500] hover:bg-[#ffea33] text-black font-black uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:translate-x-1 hover:shadow-[0px_0px_0px_0px_rgba(0,0,0,1)] transition-all">
+              <Link2 className="w-5 h-5 mr-2" /> Sync Job URL
+            </Button>}>
+              Sync Job URL
             </DialogTrigger>
-            <DialogContent>
-              <form onSubmit={handleCreateApplication}>
+            <DialogContent className="border-4 border-black rounded-none shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] bg-[#faf8f5]">
+              <form onSubmit={handleSyncJob}>
                 <DialogHeader>
-                  <DialogTitle>Add New Application</DialogTitle>
+                  <DialogTitle className="font-black uppercase text-xl border-b-4 border-black pb-2 mb-4">Sync Job from URL</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="company">Company</Label>
-                    <Input id="company" value={newApp.company} onChange={e => setNewApp(p => ({ ...p, company: e.target.value }))} required />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="roleTitle">Role Title</Label>
-                    <Input id="roleTitle" value={newApp.roleTitle} onChange={e => setNewApp(p => ({ ...p, roleTitle: e.target.value }))} required />
+                  <div className="space-y-2 text-black font-bold">
+                    <Label htmlFor="url" className="uppercase font-black tracking-widest">LinkedIn / Indeed URL</Label>
+                    <Input id="url" value={jobUrl} onChange={e => setJobUrl(e.target.value)} required placeholder="https://linkedin.com/jobs/view/..." className="border-4 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] focus-visible:ring-0 focus-visible:translate-x-1 focus-visible:translate-y-1 transition-all font-bold" />
                   </div>
                 </div>
                 <DialogFooter>
-                  <Button type="submit" disabled={isCreating}>Save</Button>
+                  <Button type="submit" disabled={isSyncing} className="h-12 px-6 rounded-none border-4 border-black bg-[#90c0ff] hover:bg-[#70aaff] text-black font-black uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:translate-x-1 hover:shadow-[0px_0px_0px_0px_rgba(0,0,0,1)] transition-all w-full">
+                    {isSyncing ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <ArrowRight className="w-5 h-5 mr-2" />}
+                    Extract & Add to Tracker
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+            <DialogTrigger render={<Button className="h-12 px-6 rounded-none border-4 border-black bg-white hover:bg-slate-100 text-black font-black uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:translate-x-1 hover:shadow-[0px_0px_0px_0px_rgba(0,0,0,1)] transition-all">
+              <Plus className="w-5 h-5 mr-2" /> New Application
+            </Button>}>
+              New Application
+            </DialogTrigger>
+            <DialogContent className="border-4 border-black rounded-none shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] bg-[#faf8f5]">
+              <form onSubmit={handleCreateApplication}>
+                <DialogHeader>
+                  <DialogTitle className="font-black uppercase text-xl border-b-4 border-black pb-2 mb-4">Add New Application</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-4 text-black font-bold">
+                  <div className="space-y-2">
+                    <Label htmlFor="company" className="uppercase font-black tracking-widest">Company</Label>
+                    <Input id="company" value={newApp.company} onChange={e => setNewApp(p => ({ ...p, company: e.target.value }))} required className="border-4 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] focus-visible:ring-0 focus-visible:translate-x-1 focus-visible:translate-y-1 transition-all font-bold" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="roleTitle" className="uppercase font-black tracking-widest">Role Title</Label>
+                    <Input id="roleTitle" value={newApp.roleTitle} onChange={e => setNewApp(p => ({ ...p, roleTitle: e.target.value }))} required className="border-4 border-black rounded-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] focus-visible:ring-0 focus-visible:translate-x-1 focus-visible:translate-y-1 transition-all font-bold" />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button type="submit" disabled={isCreating} className="h-12 px-6 rounded-none border-4 border-black bg-[#abf5d1] hover:bg-[#8ee5c0] text-black font-black uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:translate-x-1 hover:shadow-[0px_0px_0px_0px_rgba(0,0,0,1)] transition-all w-full">
+                    {isCreating ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Plus className="w-5 h-5 mr-2" />}
+                    Save Application
+                  </Button>
                 </DialogFooter>
               </form>
             </DialogContent>
