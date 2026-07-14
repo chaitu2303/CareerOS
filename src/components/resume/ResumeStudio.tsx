@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { ATSAnalysisWorkspace, EvaluationFinding } from './ATSAnalysisWorkspace';
 
 interface ResumeData {
   id: string;
@@ -46,8 +47,6 @@ type SaveState = 'idle' | 'saving' | 'saved' | 'error';
 type ActivePanel = 'sections' | 'ai' | 'versions' | 'tailoring';
 type ViewMode = 'desktop' | 'mobile';
 type TailoringMode = 'CONSERVATIVE' | 'BALANCED' | 'AGGRESSIVE';
-
-import { ATSAnalysisWorkspace, EvaluationFinding } from './ATSAnalysisWorkspace';
 
 export function ResumeStudio({ resume, versions, jobTargets }: ResumeStudioProps) {
   const [content, setContent] = useState<ResumeContent>(() => {
@@ -226,12 +225,12 @@ export function ResumeStudio({ resume, versions, jobTargets }: ResumeStudioProps
   }, [content, resume.id, selectedJobId]);
 
   return (
-    <div className="flex flex-col h-[calc(100vh-3.5rem)] bg-muted/5 relative">
+    <div className="flex flex-col h-[calc(100vh-3.5rem)] bg-[#faf8f5] text-black relative">
       {/* Topbar */}
-      <header className="h-12 border-b bg-card flex items-center justify-between px-4 shrink-0 gap-3 no-print">
-        <div className="flex items-center gap-3 min-w-0">
-          <Link href="/dashboard/resumes" className="p-1.5 rounded-lg hover:bg-muted transition-colors">
-            <ChevronLeft className="w-4 h-4" />
+      <header className="h-16 border-b-4 border-black bg-white flex items-center justify-between px-6 shrink-0 gap-4 no-print shadow-[0px_4px_0px_0px_rgba(0,0,0,1)] z-20">
+        <div className="flex items-center gap-4 min-w-0">
+          <Link href="/dashboard/resumes" className="p-2 border-2 border-black hover:bg-[#ffe500] hover:-translate-y-0.5 hover:-translate-x-0.5 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all">
+            <ChevronLeft className="w-5 h-5" />
           </Link>
           <input
             value={title}
@@ -243,14 +242,14 @@ export function ResumeStudio({ resume, versions, jobTargets }: ResumeStudioProps
                 body: JSON.stringify({ title }),
               });
             }}
-            className="text-sm font-semibold bg-transparent border-none outline-none min-w-0 max-w-[200px]"
+            className="text-lg font-black uppercase tracking-widest bg-transparent border-none outline-none min-w-0 max-w-[250px] focus:ring-0"
           />
           <SaveIndicator />
         </div>
 
         <div className="flex items-center gap-2">
           {/* View mode toggle */}
-          <div className="hidden md:flex items-center bg-muted rounded-lg p-0.5 gap-0.5">
+          <div className="hidden md:flex items-center border-4 border-black bg-white p-1 gap-1 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
             {([
               { mode: 'desktop', icon: Monitor },
               { mode: 'mobile', icon: Smartphone },
@@ -258,62 +257,57 @@ export function ResumeStudio({ resume, versions, jobTargets }: ResumeStudioProps
               <button
                 key={vm}
                 onClick={() => setViewMode(vm)}
-                className={`p-1.5 rounded-md transition-all ${viewMode === vm ? 'bg-card shadow-sm' : 'hover:bg-card/50'}`}
+                className={`p-2 transition-all ${viewMode === vm ? 'bg-black text-white' : 'hover:bg-gray-200 text-black'}`}
               >
-                <Icon className="w-3.5 h-3.5" />
+                <Icon className="w-4 h-4" />
               </button>
             ))}
           </div>
 
-          <Button
-            variant="default"
-            size="sm"
+          <button
             onClick={runAtsAnalysis}
             disabled={atsLoading}
-            className="gap-1.5 text-xs h-8 bg-blue-600 hover:bg-blue-700"
+            className="flex items-center gap-2 h-10 px-4 border-4 border-black bg-[#90c0ff] hover:bg-[#70aaff] text-black font-black uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 hover:-translate-x-0.5 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all disabled:opacity-50"
           >
-            {atsLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileSearch className="w-3.5 h-3.5" />}
+            {atsLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileSearch className="w-4 h-4" />}
             ATS Score
-          </Button>
+          </button>
 
-          <Button
-            variant="outline"
-            size="sm"
+          <button
             onClick={() => saveVersion('Manual save')}
-            className="gap-1.5 text-xs h-8"
+            className="flex items-center gap-2 h-10 px-4 border-4 border-black bg-white hover:bg-slate-100 text-black font-black uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 hover:-translate-x-0.5 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all"
           >
-            <History className="w-3.5 h-3.5" /> Save Version
-          </Button>
+            <History className="w-4 h-4" /> Save Version
+          </button>
 
-          <Button
-            size="sm"
+          <button
             onClick={exportPdf}
-            className="gap-1.5 text-xs h-8"
+            className="flex items-center gap-2 h-10 px-4 border-4 border-black bg-[#abf5d1] hover:bg-[#8ee5c0] text-black font-black uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-0.5 hover:-translate-x-0.5 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all"
           >
-            <FileDown className="w-3.5 h-3.5" /> Export PDF
-          </Button>
+            <FileDown className="w-4 h-4" /> Export PDF
+          </button>
         </div>
       </header>
 
       {/* Main Studio Layout */}
-      <div className="flex flex-1 min-h-0">
+      <div className="flex flex-1 min-h-0 relative z-10">
 
         {/* LEFT PANEL — Sections & Controls */}
-        <aside className="w-72 border-r bg-card flex flex-col shrink-0 overflow-hidden no-print hidden md:flex">
+        <aside className="w-80 border-r-4 border-black bg-white flex flex-col shrink-0 overflow-hidden no-print hidden md:flex">
           {/* Panel Tabs */}
-          <div className="flex border-b shrink-0">
+          <div className="flex border-b-4 border-black shrink-0">
             {([
-              { key: 'sections', label: 'Sections' },
-              { key: 'ai', label: 'AI' },
-              { key: 'versions', label: 'History' },
+              { key: 'sections', label: 'Sections', color: 'bg-[#90c0ff]' },
+              { key: 'ai', label: 'AI', color: 'bg-[#ff90e8]' },
+              { key: 'versions', label: 'History', color: 'bg-[#ffe500]' },
             ] as const).map(tab => (
               <button
                 key={tab.key}
                 onClick={() => setActivePanel(tab.key)}
-                className={`flex-1 py-2.5 text-xs font-medium transition-colors ${
+                className={`flex-1 py-3 text-sm font-black uppercase transition-all ${
                   activePanel === tab.key
-                    ? 'text-primary border-b-2 border-primary'
-                    : 'text-muted-foreground hover:text-foreground'
+                    ? `border-b-4 border-black ${tab.color} translate-y-1`
+                    : 'text-black hover:bg-slate-100'
                 }`}
               >
                 {tab.label}
@@ -420,29 +414,29 @@ function VersionHistory({
   }
 
   return (
-    <div className="p-4 space-y-3">
-      <p className="text-xs text-muted-foreground">Click a version to restore it as your working copy.</p>
+    <div className="p-6 space-y-4 font-bold">
+      <p className="text-xs uppercase tracking-widest bg-black text-white px-2 py-1 inline-block">Click a version to restore.</p>
       {versions.length === 0 && (
-        <p className="text-sm text-muted-foreground text-center py-6">No saved versions yet.</p>
+        <p className="text-sm uppercase text-center py-6">No saved versions yet.</p>
       )}
       {versions.map(v => (
-        <div key={v.id} className="border rounded-xl p-3 space-y-1 hover:border-primary/40 transition-all">
+        <div key={v.id} className="border-4 border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-4 space-y-2 hover:-translate-y-1 hover:-translate-x-1 hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">v{v.versionNumber}</span>
-            <span className="text-[10px] text-muted-foreground">
+            <span className="text-xl font-black uppercase">v{v.versionNumber}</span>
+            <span className="text-xs uppercase tracking-widest bg-black text-white px-2">
               {new Date(v.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
             </span>
           </div>
-          {v.title && <div className="text-xs text-muted-foreground">{v.title}</div>}
+          {v.title && <div className="text-sm font-bold opacity-80">{v.title}</div>}
           {v.tailoredForJob && (
-            <div className="text-[10px] text-blue-600">🎯 Tailored version</div>
+            <div className="text-xs font-black uppercase bg-[#90c0ff] border-2 border-black px-2 py-1 inline-block">🎯 Tailored</div>
           )}
           <button
             onClick={() => restore(v.id)}
             disabled={loading === v.id}
-            className="mt-2 w-full text-xs py-1.5 rounded-lg border hover:bg-muted transition-all disabled:opacity-50"
+            className="mt-4 w-full text-sm font-black uppercase py-2 border-4 border-black bg-[#ffe500] hover:bg-black hover:text-[#ffe500] transition-colors disabled:opacity-50"
           >
-            {loading === v.id ? 'Restoring...' : 'Restore this version'}
+            {loading === v.id ? 'Restoring...' : 'Restore'}
           </button>
         </div>
       ))}

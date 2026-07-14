@@ -1,171 +1,152 @@
-import { auth } from '@/auth';
-import { redirect } from 'next/navigation';
-import { prisma } from '@/lib/prisma';
+'use client';
+
+import { useState, useEffect } from 'react';
+import { FileText, Plus, Copy, ArrowRight, Clock, Briefcase, Upload, Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import { Plus, FileText, ArrowRight, Copy, Clock, Briefcase } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useRouter } from 'next/navigation';
 
-export const dynamic = 'force-dynamic';
+export default function ResumesPage() {
+  const [resumes, setResumes] = useState<any[]>([]);
+  const [hasProfile, setHasProfile] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
+  const router = useRouter();
 
-export default async function ResumesPage() {
-  const session = await auth();
-  const authUser = session?.user;
-  if (!authUser) redirect('/');
-
-  const dbUser = await prisma.user.findUnique({ where: { email: authUser.email! } });
-  const resumes = dbUser
-    ? await prisma.resume.findMany({
-        where: { userId: dbUser.id },
-        include: { versions: { orderBy: { versionNumber: 'desc' }, take: 1 } },
-        orderBy: { updatedAt: 'desc' },
+  useEffect(() => {
+    // In a real Server Component we'd fetch directly via prisma.
+    // For this client component we can just use an API or just mock it, but actually the original was a server component.
+    // Let me rewrite this back as a Server component but with a client wrapper for the upload?
+    // Let me just stick to Client Component and fetch data to make upload handling easier.
+    fetch('/api/resumes')
+      .then(r => r.json())
+      .then(data => {
+        setResumes(data.resumes || []);
+        setHasProfile(data.hasProfile || false);
+        setLoading(false);
       })
-    : [];
+      .catch(() => setLoading(false));
+  }, []);
 
-  const hasProfile = dbUser
-    ? !!(await prisma.careerProfile.findUnique({ where: { userId: dbUser.id } }))
-    : false;
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const res = await fetch('/api/resumes/upload', {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+      if (data.success) {
+        router.push(`/dashboard/resumes/${data.resumeId}`);
+      } else {
+        alert(data.error || 'Upload failed');
+        setUploading(false);
+      }
+    } catch (err) {
+      alert('Network error');
+      setUploading(false);
+    }
+  };
+
+  if (loading) {
+    return <div className="flex h-[50vh] items-center justify-center"><Loader2 className="w-8 h-8 animate-spin" /></div>;
+  }
 
   return (
-    <div className="max-w-5xl mx-auto p-4 md:p-8 space-y-8 animate-in fade-in duration-500">
+    <div className="max-w-7xl mx-auto py-8 px-4 h-full flex flex-col min-h-[calc(100vh-4rem)] bg-[#faf8f5] text-black">
       
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 border-b-8 border-black pb-8 shrink-0">
         <div>
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-              <FileText className="w-5 h-5 text-primary" />
-            </div>
-            <h1 className="text-3xl font-bold tracking-tight">Resume Studio</h1>
-          </div>
-          <p className="text-muted-foreground text-balance">
-            Build, tailor, and export professional resumes from your Master Career Profile.
-          </p>
+          <h1 className="text-4xl md:text-5xl font-black tracking-tighter uppercase">Resume Studio</h1>
+          <p className="font-bold text-lg mt-1 bg-[#ff90e8] text-black inline-block px-2 border-2 border-black -rotate-1">Build, tailor, and export professional resumes.</p>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
+        
+        <div className="flex flex-wrap gap-2">
           {hasProfile && (
-            <Link href="/dashboard/resumes/new?mode=FROM_PROFILE">
-              <Button variant="secondary" className="rounded-xl shadow-sm">
-                <Copy className="w-4 h-4 mr-2" /> From Profile
-              </Button>
+            <Link href="/dashboard/resumes/new?mode=FROM_PROFILE" className="h-12 px-6 flex items-center justify-center border-4 border-black bg-[#90c0ff] hover:bg-[#70aaff] text-black font-black uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:translate-x-1 hover:shadow-[0px_0px_0px_0px_rgba(0,0,0,1)] transition-all">
+              <Copy className="w-5 h-5 mr-2" /> From Profile
             </Link>
           )}
-          <Link href="/dashboard/resumes/new?mode=BLANK">
-            <Button className="rounded-xl shadow-lg">
-              <Plus className="w-4 h-4 mr-2" /> New Resume
-            </Button>
+          <Link href="/dashboard/resumes/new?mode=BLANK" className="h-12 px-6 flex items-center justify-center border-4 border-black bg-white hover:bg-slate-100 text-black font-black uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:translate-x-1 hover:shadow-[0px_0px_0px_0px_rgba(0,0,0,1)] transition-all">
+            <Plus className="w-5 h-5 mr-2" /> Blank Resume
           </Link>
         </div>
       </div>
 
-      {resumes.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-24 border border-border/50 rounded-3xl bg-card shadow-sm text-center space-y-6">
-          <div className="w-20 h-20 rounded-full bg-primary/5 flex items-center justify-center relative">
-            <div className="absolute inset-0 rounded-full bg-primary/10 animate-ping opacity-20" />
-            <FileText className="w-8 h-8 text-primary" />
+      <div className="mb-12 relative overflow-hidden bg-[#abf5d1] border-4 border-black p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col md:flex-row items-center justify-between gap-6 group hover:-translate-y-1 hover:-translate-x-1 hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] transition-transform">
+        <div className="absolute top-0 right-0 bg-black text-white font-black uppercase px-4 py-2 text-xs border-b-4 border-l-4 border-black">Import</div>
+        <div className="flex items-center gap-6 z-10">
+          <div className="w-16 h-16 bg-white border-4 border-black flex items-center justify-center -rotate-3 group-hover:rotate-0 transition-transform">
+            <Upload className="w-8 h-8" />
           </div>
-          <div className="max-w-md px-4">
-            <h2 className="text-2xl font-bold mb-2">No resumes yet</h2>
-            <p className="text-muted-foreground text-balance">
-              Create your first ATS-optimized resume. Let the CareerOS Native Intelligence Engine extract and format your experiences automatically.
-            </p>
+          <div>
+            <h2 className="text-3xl font-black uppercase tracking-tight">Upload Existing Resume</h2>
+            <p className="font-bold opacity-80 uppercase tracking-widest mt-1">PDF format. We'll parse it instantly.</p>
           </div>
-          <div className="flex flex-wrap justify-center gap-4">
-            {hasProfile && (
-              <Link href="/dashboard/resumes/new?mode=FROM_PROFILE">
-                <Button variant="secondary" size="lg" className="rounded-xl">
-                  <Copy className="w-4 h-4 mr-2" /> Auto-Generate
-                </Button>
-              </Link>
-            )}
-            <Link href="/dashboard/resumes/new?mode=BLANK">
-              <Button size="lg" className="rounded-xl">
-                <Plus className="w-4 h-4 mr-2" /> Start Blank
-              </Button>
-            </Link>
-          </div>
-          {!hasProfile && (
-            <div className="mt-4 p-4 bg-warning/10 border border-warning/20 rounded-2xl text-sm text-warning-foreground max-w-md mx-4 text-left flex items-start gap-3">
-              <div className="w-5 h-5 shrink-0 bg-warning/20 rounded-full flex items-center justify-center mt-0.5">
-                <span className="text-warning text-xs font-bold">!</span>
+        </div>
+        
+        <div className="relative z-10 w-full md:w-auto">
+          <input 
+            type="file" 
+            accept=".pdf" 
+            onChange={handleFileUpload}
+            disabled={uploading}
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
+          />
+          <button disabled={uploading} className="w-full md:w-auto h-14 px-8 border-4 border-black bg-[#ffe500] text-black font-black uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] group-hover:bg-black group-hover:text-[#ffe500] transition-colors flex items-center justify-center pointer-events-none">
+            {uploading ? <Loader2 className="w-6 h-6 animate-spin mr-2" /> : <ArrowRight className="w-6 h-6 mr-2" />}
+            {uploading ? 'Extracting...' : 'Select File'}
+          </button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {resumes.map((resume: any, idx: number) => {
+          const latestVersion = resume.versions?.[0];
+          const colors = ['bg-[#ff90e8]', 'bg-[#90c0ff]', 'bg-[#ffe500]', 'bg-[#ff4040]', 'bg-[#abf5d1]'];
+          const color = colors[idx % colors.length];
+          return (
+            <Link
+              key={resume.id}
+              href={`/dashboard/resumes/${resume.id}`}
+              className="bg-white border-4 border-black p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col hover:-translate-y-1 hover:-translate-x-1 hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] transition-transform min-h-[260px] relative overflow-hidden group"
+            >
+              <div className="flex items-start justify-between gap-3 mb-6 relative z-10">
+                <div className={`w-14 h-14 border-4 border-black flex items-center justify-center rotate-3 group-hover:-rotate-3 transition-transform ${color}`}>
+                  <FileText className="w-7 h-7 text-black" />
+                </div>
+                {resume.atsScore != null && (
+                  <div className="bg-black text-white px-3 py-1 font-black uppercase tracking-widest text-xs border-2 border-black">
+                    ATS {resume.atsScore}
+                  </div>
+                )}
               </div>
-              <p>Complete your <Link href="/onboarding" className="font-bold underline hover:text-warning transition-colors">Career Profile</Link> to unlock Native Intelligence profile-based generation.</p>
-            </div>
-          )}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          
-          {/* Create New Card */}
-          <Link
-            href="/dashboard/resumes/new?mode=BLANK"
-            className="flex flex-col items-center justify-center gap-4 bg-muted/10 border-2 border-dashed border-border/60 rounded-3xl p-8 hover:border-primary/50 hover:bg-primary/5 transition-all text-center group min-h-[220px]"
-          >
-            <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center group-hover:bg-primary/10 group-hover:scale-110 transition-all duration-300">
-              <Plus className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
-            </div>
-            <div>
-              <div className="text-sm font-bold text-foreground mb-1">Create New Resume</div>
-              <div className="text-xs text-muted-foreground font-medium">Blank or via Native Engine</div>
-            </div>
-          </Link>
-
-          {resumes.map(resume => {
-            const latestVersion = resume.versions[0];
-            return (
-              <Link
-                key={resume.id}
-                href={`/dashboard/resumes/${resume.id}`}
-                className="group flex flex-col bg-card border border-border/50 rounded-3xl p-6 hover:border-primary/50 hover:shadow-lg transition-all duration-300 min-h-[220px] relative overflow-hidden"
-              >
-                {/* Background Decor */}
-                <div className="absolute top-0 right-0 -mt-8 -mr-8 w-32 h-32 bg-primary/5 rounded-full blur-2xl group-hover:bg-primary/10 transition-colors" />
-                
-                <div className="relative z-10 flex-1">
-                  <div className="flex items-start justify-between gap-3 mb-5">
-                    <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0 border border-primary/10">
-                      <FileText className="w-6 h-6 text-primary" />
-                    </div>
-                    {resume.atsScore != null && (
-                      <div className={`px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-widest flex items-center gap-1 border ${
-                        resume.atsScore >= 80 ? 'bg-success/10 text-success border-success/20' :
-                        resume.atsScore >= 60 ? 'bg-warning/10 text-warning border-warning/20' :
-                        'bg-destructive/10 text-destructive border-destructive/20'
-                      }`}>
-                        <span>ATS {resume.atsScore}</span>
-                      </div>
-                    )}
-                  </div>
-                  
-                  <h3 className="font-bold text-lg leading-tight mb-2 group-hover:text-primary transition-colors line-clamp-2">
-                    {resume.title}
-                  </h3>
-                  
-                  <div className="flex flex-col gap-2 mt-auto">
-                    <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                      <Clock className="w-3.5 h-3.5" />
-                      {new Date(resume.updatedAt).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
-                    </div>
-                    {latestVersion?.tailoredForJob && (
-                      <div className="flex items-center gap-2 text-xs font-bold text-info">
-                        <Briefcase className="w-3.5 h-3.5" />
-                        AI Tailored
-                      </div>
-                    )}
-                  </div>
+              
+              <h3 className="font-black text-2xl uppercase leading-tight mb-4 relative z-10 line-clamp-2">
+                {resume.title}
+              </h3>
+              
+              <div className="flex flex-col gap-2 mt-auto relative z-10">
+                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest bg-black text-white px-2 py-1 self-start">
+                  <Clock className="w-3.5 h-3.5" />
+                  {new Date(resume.updatedAt).toLocaleDateString()}
                 </div>
-
-                <div className="relative z-10 mt-6 pt-4 border-t border-border/50 flex items-center justify-between text-xs font-bold text-muted-foreground">
-                  <span className="uppercase tracking-widest">{resume.versions.length > 0 ? `v${resume.versions[0]?.versionNumber ?? 1}` : 'v1'}</span>
-                  <div className="flex items-center gap-1 group-hover:text-primary transition-colors">
-                    <span>Open</span>
-                    <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                {latestVersion?.tailoredForJob && (
+                  <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest bg-[#ff4040] text-white px-2 py-1 self-start border-2 border-black">
+                    <Briefcase className="w-3.5 h-3.5" />
+                    AI Tailored
                   </div>
-                </div>
-              </Link>
-            );
-          })}
-        </div>
-      )}
+                )}
+              </div>
+            </Link>
+          );
+        })}
+      </div>
     </div>
   );
 }
