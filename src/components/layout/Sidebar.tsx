@@ -176,7 +176,7 @@ export function Sidebar({ userName, streak = 0, xp = 0, level = 1 }: SidebarProp
           )}
         </Link>
         <Link
-          href="/settings"
+          href="/dashboard/settings"
           title={isCollapsed ? "Settings" : undefined}
           className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-all ${isCollapsed ? 'justify-center' : ''}`}
         >
@@ -220,7 +220,7 @@ export function Sidebar({ userName, streak = 0, xp = 0, level = 1 }: SidebarProp
             <Bot className="w-5 h-5 text-muted-foreground" />
             <div className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-success ring-2 ring-card" />
           </Link>
-          <Link href="/settings" className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center">
+          <Link href="/dashboard/settings" className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center">
             <UserCircle className="w-4 h-4 text-primary" />
           </Link>
         </div>
