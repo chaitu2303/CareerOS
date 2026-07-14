@@ -7,26 +7,21 @@ import { Sparkles, ArrowRight, Target, Brain, Briefcase } from 'lucide-react';
 
 export default function Home() {
   return (
-    <main className="min-h-screen flex flex-col items-center overflow-hidden bg-slate-950 text-slate-50 relative selection:bg-indigo-500/30">
-      {/* Background Gradients */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-indigo-900/20 via-slate-950 to-slate-950" />
-      <div className="absolute -top-[30%] -left-[10%] w-[60%] h-[60%] rounded-full bg-purple-900/20 blur-[120px]" />
-      <div className="absolute top-[20%] -right-[20%] w-[50%] h-[50%] rounded-full bg-indigo-900/20 blur-[120px]" />
-
-      {/* Navigation (Mockup) */}
-      <nav className="w-full max-w-7xl mx-auto px-6 py-6 flex items-center justify-between relative z-10">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center shadow-[0_0_20px_rgba(99,102,241,0.4)]">
-            <Sparkles className="w-4 h-4 text-white" />
+    <main className="min-h-screen bg-[#faf8f5] text-slate-900 font-sans selection:bg-[#ffb0b0]">
+      {/* Navigation */}
+      <nav className="w-full max-w-7xl mx-auto px-6 py-8 flex items-center justify-between border-b-4 border-black">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-[#ffe500] border-4 border-black rounded-full flex items-center justify-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            <Sparkles className="w-5 h-5 text-black" />
           </div>
-          <span className="text-xl font-bold tracking-tight">CareerOS<span className="text-indigo-400">.ai</span></span>
+          <span className="text-3xl font-black tracking-tighter uppercase">CareerOS</span>
         </div>
-        <div className="flex items-center gap-4">
-          <Link href="/login">
-            <Button variant="ghost" className="text-slate-300 hover:text-white hover:bg-slate-800/50">Sign In</Button>
+        <div className="flex items-center gap-6">
+          <Link href="/login" className="font-bold text-lg hover:underline decoration-4 underline-offset-4 decoration-[#ffb0b0]">
+            Sign In
           </Link>
           <Link href="/register">
-            <Button className="bg-indigo-600 hover:bg-indigo-500 text-white rounded-full px-6 shadow-[0_0_20px_rgba(79,70,229,0.3)] hover:shadow-[0_0_30px_rgba(79,70,229,0.5)] transition-all">
+            <Button className="bg-[#ff90e8] hover:bg-[#ff70dd] text-black font-bold text-lg py-6 px-8 rounded-none border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:translate-x-1 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all">
               Get Started
             </Button>
           </Link>
@@ -34,79 +29,116 @@ export default function Home() {
       </nav>
 
       {/* Hero Section */}
-      <section className="flex-1 w-full max-w-5xl mx-auto px-6 flex flex-col items-center justify-center text-center relative z-10 mt-12 md:mt-20">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: 'easeOut' }}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-sm font-medium mb-8"
-        >
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
-          </span>
-          Next-Gen AI Career Assistant
-        </motion.div>
-
-        <motion.h1 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1, ease: 'easeOut' }}
-          className="text-5xl md:text-7xl font-extrabold tracking-tight mb-8 leading-tight"
-        >
-          Automate Your <br className="hidden md:block" />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-indigo-400 animate-gradient-x">
-            Job Search Journey
-          </span>
-        </motion.h1>
-
-        <motion.p 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2, ease: 'easeOut' }}
-          className="text-lg md:text-xl text-slate-400 mb-12 max-w-2xl leading-relaxed"
-        >
-          From intelligent resume tailoring to cloud-based auto-applications and AI mock interviews, CareerOS builds your skills and lands you the job—seamlessly.
-        </motion.p>
+      <section className="w-full max-w-7xl mx-auto px-6 py-16 md:py-24 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
         
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.3, ease: 'easeOut' }}
-          className="flex flex-col sm:flex-row items-center gap-4"
-        >
-          <Link href="/login">
-            <Button size="lg" className="h-14 px-8 rounded-full bg-white text-slate-950 hover:bg-slate-200 text-lg font-semibold gap-2 shadow-[0_0_40px_rgba(255,255,255,0.1)] hover:scale-105 transition-all">
-              Launch Dashboard <ArrowRight className="w-5 h-5" />
-            </Button>
-          </Link>
-          <Button size="lg" variant="outline" className="h-14 px-8 rounded-full border-slate-700 bg-slate-900/50 hover:bg-slate-800 text-lg font-medium backdrop-blur-md">
-            View Live Demo
-          </Button>
-        </motion.div>
+        <div className="flex flex-col items-start relative z-10">
+          <motion.div
+            initial={{ opacity: 0, x: -20, rotate: -5 }}
+            animate={{ opacity: 1, x: 0, rotate: -2 }}
+            transition={{ duration: 0.4, ease: 'easeOut' }}
+            className="px-4 py-2 bg-[#23a094] text-white border-4 border-black font-bold text-sm uppercase tracking-widest shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] mb-8"
+          >
+            Built by Humans.
+          </motion.div>
 
-        {/* Feature Grid */}
+          <motion.h1 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="text-6xl md:text-8xl font-black uppercase tracking-tighter leading-[0.9] mb-8"
+          >
+            Hate <br />
+            Applying <br />
+            <span className="inline-block bg-[#ff90e8] px-4 pt-4 pb-2 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] rotate-2 mt-2">
+              To Jobs?
+            </span>
+          </motion.h1>
+
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="text-xl md:text-2xl font-medium mb-12 max-w-xl leading-relaxed border-l-8 border-[#ffb0b0] pl-6"
+          >
+            We do too. CareerOS automatically tailors your resume and fills out job applications while you practice with our brutally honest AI interviewer.
+          </motion.p>
+          
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="flex flex-col sm:flex-row gap-6 w-full sm:w-auto"
+          >
+            <Link href="/login" className="w-full sm:w-auto">
+              <Button size="lg" className="w-full bg-[#90c0ff] hover:bg-[#70aaff] text-black h-16 px-10 rounded-none border-4 border-black text-xl font-bold shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:translate-x-1 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all flex gap-3">
+                Launch App <ArrowRight className="w-6 h-6" />
+              </Button>
+            </Link>
+          </motion.div>
+        </div>
+
+        {/* Hero Visual (Asymmetric Abstract) */}
         <motion.div 
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.5, ease: 'easeOut' }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-24 w-full max-w-4xl text-left"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+          className="relative h-[500px] hidden lg:block"
         >
-          {[
-            { icon: Target, title: 'Cloud Auto-Apply', desc: 'Paste a link. We tailor your resume and fill the application automatically.' },
-            { icon: Brain, title: 'Mock Interviews', desc: 'Practice with our AI interviewer that dynamically adapts to your target job.' },
-            { icon: Briefcase, title: 'Skill Scaling', desc: 'Track your XP and grow your technical skills from scratch to top-tier.' }
-          ].map((feat, i) => (
-            <div key={i} className="p-6 rounded-3xl bg-slate-900/40 border border-slate-800/60 backdrop-blur-sm hover:bg-slate-800/50 transition-colors group">
-              <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20 mb-4 group-hover:scale-110 transition-transform">
-                <feat.icon className="w-6 h-6 text-indigo-400" />
-              </div>
-              <h3 className="text-lg font-bold text-slate-200 mb-2">{feat.title}</h3>
-              <p className="text-sm text-slate-400 leading-relaxed">{feat.desc}</p>
+          <div className="absolute top-10 right-10 w-64 h-64 bg-[#ffe500] border-4 border-black rounded-full shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] z-0" />
+          <div className="absolute top-32 left-10 w-80 h-80 bg-[#ffb0b0] border-4 border-black shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] -rotate-6 z-10 p-8 flex flex-col justify-between">
+            <div className="w-full h-8 bg-black mb-4" />
+            <div className="w-3/4 h-8 bg-black mb-4" />
+            <div className="w-1/2 h-8 bg-black mb-4" />
+            <div className="mt-auto flex gap-4">
+               <div className="w-16 h-16 rounded-full bg-white border-4 border-black" />
+               <div className="flex-1 bg-white border-4 border-black" />
             </div>
-          ))}
+          </div>
+          <div className="absolute bottom-10 right-20 bg-white border-4 border-black p-6 shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] rotate-3 z-20 flex items-center gap-4">
+            <CheckCircle className="w-8 h-8 text-[#23a094]" />
+            <span className="font-bold text-xl uppercase">Application Sent</span>
+          </div>
         </motion.div>
       </section>
+
+      {/* Features - Brutalist Grid */}
+      <section className="w-full max-w-7xl mx-auto px-6 py-24">
+        <h2 className="text-5xl font-black uppercase mb-16 border-b-8 border-black pb-4 inline-block">How it works</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {[
+            { icon: Target, color: 'bg-[#ff90e8]', title: 'Cloud Auto-Apply', desc: 'Just paste a job URL. Our headless cloud browsers navigate the site and apply for you.' },
+            { icon: Brain, color: 'bg-[#90c0ff]', title: 'Mock Interviews', desc: 'Sweat in practice, not in reality. Talk to an AI that grills you like a real hiring manager.' },
+            { icon: Briefcase, color: 'bg-[#ffe500]', title: 'Skill Builder', desc: 'Earn XP. Level up. Go from a complete beginner to a senior engineer through simulated rounds.' }
+          ].map((feat, i) => (
+            <motion.div 
+              initial={{ opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: i * 0.1 }}
+              key={i} 
+              className={`p-8 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] ${feat.color} hover:-translate-y-2 hover:shadow-[16px_16px_0px_0px_rgba(0,0,0,1)] transition-all`}
+            >
+              <div className="w-16 h-16 bg-white border-4 border-black flex items-center justify-center mb-8 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] -rotate-3">
+                <feat.icon className="w-8 h-8 text-black" />
+              </div>
+              <h3 className="text-2xl font-black uppercase mb-4">{feat.title}</h3>
+              <p className="text-lg font-medium">{feat.desc}</p>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+      
+      {/* Fix missing CheckCircle icon by importing it at the top or locally */}
     </main>
+  );
+}
+
+// Temporary icon component since we used CheckCircle but didn't import it in the replacement above
+function CheckCircle(props: any) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+      <polyline points="22 4 12 14.01 9 11.01"/>
+    </svg>
   );
 }
