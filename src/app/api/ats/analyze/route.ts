@@ -60,6 +60,25 @@ export async function POST(req: Request) {
 
     const score = Math.round((matchedSkills.length / (matchedSkills.length + missingSkills.length || 1)) * 100);
 
+    // Simulated tailored resume generation
+    const tailoredResume = `
+JOHN DOE - Software Engineer
+johndoe@email.com | linkedin.com/in/johndoe
+
+SUMMARY
+Highly motivated Software Engineer with experience in building scalable applications. Proven ability to leverage ${matchedSkills[0] || 'modern tech'} and ${matchedSkills[1] || 'frameworks'} to deliver robust solutions.
+
+EXPERIENCE
+Senior Software Engineer | Tech Corp | 2020 - Present
+- Engineered high-performance backend systems utilizing ${matchedSkills[2] || 'cloud technologies'}, improving latency by 30%.
+- Integrated ${matchedSkills.slice(0,3).join(', ')} directly into the core platform to align with industry standards.
+- Addressed legacy issues by refactoring codebases to support ${missingSkills[0] || 'new requirements'}.
+
+SKILLS
+Core: ${matchedSkills.join(', ')}
+Learning: ${missingSkills.join(', ')}
+    `.trim();
+
     return NextResponse.json({
       score: score > 0 ? score : Math.floor(Math.random() * (40 - 20) + 20),
       matchedSkills: matchedSkills.slice(0, 10),
@@ -67,6 +86,7 @@ export async function POST(req: Request) {
       readability: 'Good',
       actionVerbs: matchedSkills.length,
       wordCount: jobDescription.split(/\s+/).length,
+      tailoredResume,
     });
 
   } catch (error: any) {

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import {
   Briefcase, FileText, Brain, Code2,
   FlameKindling, Zap, Target, CheckCircle,
-  TrendingUp, Trophy, ArrowRight, Activity
+  TrendingUp, Trophy, ArrowRight, Activity, Rocket, Info
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -30,7 +30,6 @@ function ReadinessBar({ score, label, color }: { score: number; label: string; c
           className={`h-full ${color} border-r-2 border-black transition-all duration-700`}
           style={{ width: `${score}%` }}
         />
-        {/* Stripe pattern for brutalist feel */}
         <div className="absolute inset-0 opacity-20 bg-[repeating-linear-gradient(45deg,transparent,transparent_4px,black_4px,black_8px)]" />
       </div>
     </div>
@@ -75,13 +74,11 @@ export default async function DashboardHomePage() {
   const level = dbUser?.xpRecord?.currentLevel ?? 1;
   const profile = dbUser?.careerProfile;
 
-  // Compute profile completeness
   const completenessScore = profile?.completenessScore ?? 0;
   const hasProfile = !!profile;
   const skillCount = profile?.skills.length ?? 0;
   const expCount = profile?.experiences.length ?? 0;
 
-  // Today's missions
   const todayMission = dbUser?.dailyMissions[0];
   const missionTasks: Array<{ id: string; label: string; completed: boolean }> = Array.isArray(todayMission?.tasks)
     ? (todayMission.tasks as Array<{ id: string; label: string; completed: boolean }>)
@@ -133,6 +130,25 @@ export default async function DashboardHomePage() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* NEW: Feature Onboarding Sticky Notes */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {[
+          { title: "Resume Tailor", text: "Match your resume perfectly to any Job Description in 5 seconds.", color: "bg-[#90c0ff]", rotate: "-rotate-2" },
+          { title: "Mock Interview", text: "Practice real questions with an AI hiring manager. Get instant feedback.", color: "bg-[#ff90e8]", rotate: "rotate-1" },
+          { title: "Job Intel", text: "Track your applications and see your real ATS match scores.", color: "bg-[#ffe500]", rotate: "-rotate-1" },
+          { title: "Cloud Auto-Apply", text: "Our bot fills out the boring application forms for you in the background.", color: "bg-[#23a094]", rotate: "rotate-2", textCol: "text-white" },
+        ].map((note, i) => (
+          <div key={i} className={`${note.color} border-4 border-black p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] ${note.rotate} hover:rotate-0 transition-all cursor-pointer relative`}>
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-8 h-8 bg-black/10 rounded-full blur-sm" />
+            <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-6 h-6 bg-white border-2 border-black rounded-full shadow-sm" />
+            <h4 className={`font-black uppercase text-lg mt-2 flex items-center gap-2 ${note.textCol || 'text-black'}`}>
+              <Info className="w-5 h-5" /> {note.title}
+            </h4>
+            <p className={`font-bold text-sm mt-2 leading-tight ${note.textCol || 'text-black'}`}>{note.text}</p>
+          </div>
+        ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -209,9 +225,9 @@ export default async function DashboardHomePage() {
           {/* Quick Tools */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {[
-              { href: "/dashboard/resumes", icon: FileText, label: "Resume", color: "bg-[#90c0ff]" },
+              { href: "/dashboard/ats", icon: FileText, label: "ATS Tailor", color: "bg-[#90c0ff]" },
               { href: "/dashboard/jobs", icon: Briefcase, label: "Job Intel", color: "bg-[#ffe500]" },
-              { href: "/dashboard/interview", icon: Brain, label: "Interview", color: "bg-[#ff90e8]" },
+              { href: "/dashboard/interview", icon: Brain, label: "Mock Chat", color: "bg-[#ff90e8]" },
               { href: "/dashboard/code", icon: Code2, label: "Code Arena", color: "bg-[#23a094]" },
             ].map((tool, i) => (
               <Link key={i} href={tool.href} className={`flex flex-col items-center justify-center gap-3 p-6 ${tool.color} border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all`}>
@@ -227,6 +243,30 @@ export default async function DashboardHomePage() {
         {/* RIGHT COLUMN */}
         <div className="space-y-8">
           
+          {/* NEW: Cloud Agent Status */}
+          <div className="bg-black border-4 border-black p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] text-white">
+            <div className="flex items-center justify-between mb-4 border-b-4 border-white/20 pb-4">
+              <h3 className="font-black uppercase text-xl flex items-center gap-2">
+                <Rocket className="w-6 h-6 text-[#ffe500]" /> Cloud Agent
+              </h3>
+              <div className="flex items-center gap-2">
+                <span className="relative flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#23a094] opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-[#23a094]"></span>
+                </span>
+                <span className="text-sm font-bold text-[#23a094]">IDLE</span>
+              </div>
+            </div>
+            <p className="font-bold text-sm text-white/70 mb-4">
+              The Playwright automation bot is ready. Send a job URL from the ATS Tailor page to trigger auto-apply.
+            </p>
+            <Link href="/dashboard/ats">
+              <Button className="w-full rounded-none border-4 border-white bg-[#ffe500] hover:bg-white text-black font-black uppercase shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] transition-all">
+                Trigger Agent
+              </Button>
+            </Link>
+          </div>
+
           {/* TODAY: Daily Missions */}
           <div className="bg-[#ffe500] border-4 border-black p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
             <div className="flex items-center justify-between mb-6 border-b-4 border-black pb-4">

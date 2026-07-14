@@ -232,6 +232,29 @@ export default function ATSAnalysisPage() {
                       </div>
                     </div>
                   </div>
+
+                  {results.tailoredResume && (
+                    <div className="mt-8 p-6 bg-[#faf8f5] border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="font-black uppercase tracking-wider">AI Tailored Resume Output</h3>
+                        <Button 
+                          size="sm"
+                          className="rounded-none border-2 border-black bg-[#90c0ff] hover:bg-black hover:text-white font-bold"
+                          onClick={() => {
+                            navigator.clipboard.writeText(results.tailoredResume);
+                            toast.success("Copied to clipboard!");
+                          }}
+                        >
+                          Copy Text
+                        </Button>
+                      </div>
+                      <Textarea 
+                        readOnly
+                        value={results.tailoredResume}
+                        className="w-full rounded-none border-4 border-black bg-white shadow-[inset_4px_4px_0px_0px_rgba(0,0,0,0.1)] focus-visible:ring-0 min-h-[300px] font-mono text-sm"
+                      />
+                    </div>
+                  )}
                 </div>
 
                 {/* Auto Apply Action */}
