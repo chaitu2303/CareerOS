@@ -3,10 +3,9 @@ import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
 import {
-  ArrowRight, Briefcase, FileText, Brain, Code2,
-  FlameKindling, Zap, Target, CheckCircle, Circle,
-  TrendingUp, ChevronRight, Plus, MonitorCheck,
-  Clock, Trophy
+  Briefcase, FileText, Brain, Code2,
+  FlameKindling, Zap, Target, CheckCircle,
+  TrendingUp, Trophy, ArrowRight, Activity
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -19,19 +18,20 @@ function getHourGreeting() {
   return 'Good evening';
 }
 
-function ReadinessBar({ score, label }: { score: number; label: string }) {
-  const color = score >= 80 ? 'bg-green-500' : score >= 60 ? 'bg-orange-500' : 'bg-red-500';
+function ReadinessBar({ score, label, color }: { score: number; label: string; color: string }) {
   return (
-    <div className="space-y-1.5">
-      <div className="flex justify-between text-sm">
-        <span className="text-muted-foreground">{label}</span>
-        <span className="font-semibold">{score}%</span>
+    <div className="space-y-2 mb-4">
+      <div className="flex justify-between text-sm font-black uppercase">
+        <span>{label}</span>
+        <span>{score}%</span>
       </div>
-      <div className="h-2 bg-muted rounded-full overflow-hidden">
+      <div className="h-4 w-full bg-white border-2 border-black overflow-hidden relative">
         <div
-          className={`h-full ${color} rounded-full transition-all duration-700`}
+          className={`h-full ${color} border-r-2 border-black transition-all duration-700`}
           style={{ width: `${score}%` }}
         />
+        {/* Stripe pattern for brutalist feel */}
+        <div className="absolute inset-0 opacity-20 bg-[repeating-linear-gradient(45deg,transparent,transparent_4px,black_4px,black_8px)]" />
       </div>
     </div>
   );
@@ -80,7 +80,6 @@ export default async function DashboardHomePage() {
   const hasProfile = !!profile;
   const skillCount = profile?.skills.length ?? 0;
   const expCount = profile?.experiences.length ?? 0;
-  const projectCount = profile?.projects.length ?? 0;
 
   // Today's missions
   const todayMission = dbUser?.dailyMissions[0];
@@ -95,177 +94,152 @@ export default async function DashboardHomePage() {
   const recentJobs = dbUser?.jobTargets ?? [];
 
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
+    <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-12 bg-[#faf8f5] text-black font-sans min-h-screen">
 
       {/* TOP AREA: Hero & Status */}
-      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
-        <div className="space-y-2">
-          <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold tracking-tight text-foreground">
+      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 border-b-8 border-black pb-8">
+        <div className="space-y-4">
+          <div className="flex items-center gap-4">
+            <h1 className="text-4xl md:text-5xl font-black tracking-tighter uppercase">
               {getHourGreeting()}, {userName}
             </h1>
-            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 bg-green-500/10 border border-green-500/20 rounded-full text-xs font-semibold text-green-600 uppercase tracking-wide">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-              </span>
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1 bg-[#23a094] border-4 border-black text-sm font-black text-white uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] -rotate-2">
               AI Core Online
             </div>
           </div>
-          <p className="text-muted-foreground max-w-2xl text-balance">
+          <p className="text-xl font-bold max-w-2xl bg-[#ffe500] inline-block px-2 border-2 border-black rotate-1">
             {hasProfile
-              ? `You are preparing for ${profile.targetRole || profile.domain || 'Software Engineering'} roles. Your profile is ${completenessScore}% complete.`
-              : "Welcome to your new Career Operating System. Let's build your verified profile."}
+              ? `Target: ${profile.targetRole || profile.domain || 'Software Engineering'}. Profile ${completenessScore}% complete.`
+              : "Welcome. Let's build your verified profile."}
           </p>
         </div>
         
-        <div className="flex items-center gap-4 flex-wrap">
-          <div className="flex flex-col items-end">
-            <span className="text-xs text-muted-foreground uppercase tracking-wider font-bold mb-1">Current Streak</span>
-            <div className={`flex items-center gap-2 ${streak > 0 ? 'text-orange-500' : 'text-muted-foreground'}`}>
-              <FlameKindling className="w-5 h-5" />
-              <span className="text-xl font-bold">{streak}</span>
+        <div className="flex items-center gap-6">
+          <div className="bg-white border-4 border-black p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center gap-4">
+            <div className="flex flex-col items-center">
+              <span className="text-xs font-black uppercase mb-1">Streak</span>
+              <div className="flex items-center gap-1 text-[#ff4040]">
+                <FlameKindling className="w-6 h-6" />
+                <span className="text-2xl font-black">{streak}</span>
+              </div>
             </div>
-          </div>
-          <div className="w-px h-10 bg-border hidden sm:block" />
-          <div className="flex flex-col items-end">
-            <span className="text-xs text-muted-foreground uppercase tracking-wider font-bold mb-1">Career Level</span>
-            <div className="flex items-center gap-2 text-yellow-500">
-              <Zap className="w-5 h-5" />
-              <span className="text-xl font-bold">{level}</span>
+            <div className="w-1 h-12 bg-black" />
+            <div className="flex flex-col items-center">
+              <span className="text-xs font-black uppercase mb-1">Level</span>
+              <div className="flex items-center gap-1 text-[#23a094]">
+                <Zap className="w-6 h-6" />
+                <span className="text-2xl font-black">{level}</span>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 xl:gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
-        {/* LEFT COLUMN (2/3 width on LG) */}
-        <div className="lg:col-span-2 space-y-6">
+        {/* LEFT COLUMN */}
+        <div className="lg:col-span-2 space-y-8">
           
           {/* PRIMARY ACTION: Next Best Action */}
-          <div className="bg-gradient-to-br from-primary to-primary/90 text-primary-foreground rounded-3xl p-6 sm:p-8 premium-shadow relative overflow-hidden">
-            <div className="absolute top-0 right-0 -mt-16 -mr-16 w-64 h-64 bg-white/10 blur-3xl rounded-full pointer-events-none" />
-            <div className="relative z-10">
-              <div className="flex items-center gap-2 text-primary-foreground/80 font-semibold uppercase tracking-widest text-xs mb-4">
-                <Target className="w-4 h-4" />
-                <span>Next Best Action</span>
-              </div>
-              <h2 className="text-2xl sm:text-3xl font-bold mb-2 text-balance">
-                Complete your {profile?.domain === 'swe' ? 'Core Engineering' : profile?.domain || 'Baseline'} assessment.
-              </h2>
-              <p className="text-primary-foreground/80 mb-8 max-w-lg">
-                Your Job Intelligence scans show this is a highly requested skill for {profile?.targetRole || 'your target roles'}, but you have no verified evidence yet.
-              </p>
-              <div className="flex flex-wrap items-center gap-4">
-                <Link href="/dashboard/assess">
-                  <Button variant="secondary" size="lg" className="rounded-xl font-bold shadow-lg">
-                    Start Assessment
-                  </Button>
-                </Link>
-                <Button variant="ghost" size="lg" className="rounded-xl text-primary-foreground hover:bg-white/20 hover:text-white">
-                  Dismiss
-                </Button>
-              </div>
+          <div className="bg-[#ff90e8] border-4 border-black p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] relative overflow-hidden group">
+            <div className="absolute top-4 right-4 bg-white border-4 border-black px-3 py-1 font-black uppercase text-sm rotate-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+              Priority
             </div>
+            <h2 className="text-3xl font-black uppercase mb-4 relative z-10 flex items-center gap-3">
+              <Target className="w-8 h-8" /> Next Action
+            </h2>
+            <p className="text-xl font-bold mb-8 max-w-lg relative z-10">
+              Complete your {profile?.domain === 'swe' ? 'Core Engineering' : profile?.domain || 'Baseline'} assessment to verify your skills.
+            </p>
+            <div className="flex gap-4 relative z-10">
+              <Link href="/dashboard/assess">
+                <Button className="h-14 px-8 rounded-none border-4 border-black bg-white hover:bg-black hover:text-white text-black font-black uppercase text-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all">
+                  Start Assessment <ArrowRight className="ml-2 w-5 h-5" />
+                </Button>
+              </Link>
+            </div>
+            {/* Background graphic */}
+            <div className="absolute -bottom-10 -right-10 w-64 h-64 border-8 border-black rounded-full opacity-20 pointer-events-none" />
           </div>
 
-          {/* PROGRESS: Career Readiness (Reimagined) */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="bg-card border border-border/50 rounded-3xl p-6 shadow-sm hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-bold text-sm text-muted-foreground uppercase tracking-wider">Career Readiness</h3>
-                <TrendingUp className="w-4 h-4 text-success" />
+          {/* PROGRESS: Career Readiness & Achievements */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+            <div className="bg-white border-4 border-black p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="font-black uppercase text-xl">Readiness</h3>
+                <TrendingUp className="w-6 h-6 text-[#23a094]" />
               </div>
-              <div className="flex items-end gap-3 mb-4">
-                <span className="text-4xl font-black">{completenessScore}</span>
-                <span className="text-muted-foreground pb-1">/ 100</span>
+              <div className="flex items-end gap-2 mb-6 border-b-4 border-black pb-4">
+                <span className="text-6xl font-black leading-none">{completenessScore}</span>
+                <span className="text-xl font-bold pb-1">/ 100</span>
               </div>
-              <div className="space-y-3">
-                <ReadinessBar score={Math.min(100, skillCount * 10)} label="Verified Skills" />
-                <ReadinessBar score={Math.min(100, expCount * 25)} label="Experience Coverage" />
-              </div>
+              <ReadinessBar score={Math.min(100, skillCount * 10)} label="Skills" color="bg-[#ffe500]" />
+              <ReadinessBar score={Math.min(100, expCount * 25)} label="Experience" color="bg-[#90c0ff]" />
             </div>
 
-            <div className="bg-card border border-border/50 rounded-3xl p-6 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
+            <div className="bg-white border-4 border-black p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col justify-between">
               <div>
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-bold text-sm text-muted-foreground uppercase tracking-wider">Recent Achievement</h3>
-                  <Trophy className="w-4 h-4 text-yellow-500" />
+                <div className="flex items-center justify-between mb-4 border-b-4 border-black pb-4">
+                  <h3 className="font-black uppercase text-xl">Latest Win</h3>
+                  <Trophy className="w-6 h-6 text-[#ff4040]" />
                 </div>
                 {dbUser?.userBadges && dbUser.userBadges.length > 0 ? (
-                  <div className="mt-4">
-                    <div className="w-12 h-12 rounded-xl bg-yellow-500/10 flex items-center justify-center mb-3 border border-yellow-500/20">
-                      <Trophy className="w-6 h-6 text-yellow-500" />
+                  <div className="mt-4 flex flex-col items-start">
+                    <div className="bg-[#ffe500] border-4 border-black p-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] -rotate-3 mb-4">
+                      <Trophy className="w-8 h-8" />
                     </div>
-                    <div className="font-bold text-lg">{dbUser.userBadges[0].badge.name}</div>
-                    <div className="text-sm text-muted-foreground mt-1">Earned recently. Keep pushing!</div>
+                    <div className="font-black text-xl uppercase">{dbUser.userBadges[0].badge.name}</div>
+                    <div className="font-bold text-sm mt-1">Earned recently. Keep pushing!</div>
                   </div>
                 ) : (
-                  <div className="mt-4 flex flex-col items-center justify-center text-center py-4 bg-muted/30 rounded-2xl border border-dashed border-border">
-                    <Trophy className="w-8 h-8 text-muted-foreground/30 mb-2" />
-                    <div className="text-sm font-medium text-muted-foreground">No achievements yet</div>
-                    <div className="text-xs text-muted-foreground/70 mt-1">Complete tasks to earn badges</div>
+                  <div className="mt-4 flex flex-col items-center justify-center text-center py-6 bg-[#faf8f5] border-4 border-black border-dashed">
+                    <Trophy className="w-10 h-10 text-black/30 mb-2" />
+                    <div className="font-black uppercase">No Badges Yet</div>
                   </div>
                 )}
               </div>
               <Link href="/dashboard/achievements">
-                <Button variant="outline" className="w-full mt-4 rounded-xl">
-                  View Career Passport
+                <Button className="w-full mt-6 rounded-none border-4 border-black bg-white hover:bg-black hover:text-white text-black font-black uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all">
+                  View Passport
                 </Button>
               </Link>
             </div>
           </div>
           
-          {/* Quick Tools (replaces old generic boxes) */}
+          {/* Quick Tools */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <Link href="/dashboard/resumes" className="flex flex-col items-center justify-center gap-3 p-4 bg-card border border-border/50 rounded-2xl hover:bg-accent hover:border-border transition-all group">
-              <div className="w-10 h-10 rounded-full bg-primary/5 flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                <FileText className="w-5 h-5" />
-              </div>
-              <span className="text-sm font-semibold">Resume Studio</span>
-            </Link>
-            <Link href="/dashboard/jobs" className="flex flex-col items-center justify-center gap-3 p-4 bg-card border border-border/50 rounded-2xl hover:bg-accent hover:border-border transition-all group">
-              <div className="w-10 h-10 rounded-full bg-primary/5 flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                <Briefcase className="w-5 h-5" />
-              </div>
-              <span className="text-sm font-semibold">Job Intel</span>
-            </Link>
-            <Link href="/dashboard/interview" className="flex flex-col items-center justify-center gap-3 p-4 bg-card border border-border/50 rounded-2xl hover:bg-accent hover:border-border transition-all group">
-              <div className="w-10 h-10 rounded-full bg-primary/5 flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                <Brain className="w-5 h-5" />
-              </div>
-              <span className="text-sm font-semibold">Mock Interview</span>
-            </Link>
-            <Link href="/dashboard/code" className="flex flex-col items-center justify-center gap-3 p-4 bg-card border border-border/50 rounded-2xl hover:bg-accent hover:border-border transition-all group">
-              <div className="w-10 h-10 rounded-full bg-primary/5 flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                <Code2 className="w-5 h-5" />
-              </div>
-              <span className="text-sm font-semibold">Coding Arena</span>
-            </Link>
+            {[
+              { href: "/dashboard/resumes", icon: FileText, label: "Resume", color: "bg-[#90c0ff]" },
+              { href: "/dashboard/jobs", icon: Briefcase, label: "Job Intel", color: "bg-[#ffe500]" },
+              { href: "/dashboard/interview", icon: Brain, label: "Interview", color: "bg-[#ff90e8]" },
+              { href: "/dashboard/code", icon: Code2, label: "Code Arena", color: "bg-[#23a094]" },
+            ].map((tool, i) => (
+              <Link key={i} href={tool.href} className={`flex flex-col items-center justify-center gap-3 p-6 ${tool.color} border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all`}>
+                <div className="w-12 h-12 bg-white border-4 border-black rounded-full flex items-center justify-center shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                  <tool.icon className="w-6 h-6 text-black" />
+                </div>
+                <span className="font-black uppercase text-sm text-center">{tool.label}</span>
+              </Link>
+            ))}
           </div>
         </div>
 
         {/* RIGHT COLUMN */}
-        <div className="space-y-6">
+        <div className="space-y-8">
           
           {/* TODAY: Daily Missions */}
-          <div className="bg-card border border-border/50 rounded-3xl p-6 shadow-sm">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="font-bold text-sm text-muted-foreground uppercase tracking-wider">Today&apos;s Missions</h3>
-              <Clock className="w-4 h-4 text-muted-foreground" />
+          <div className="bg-[#ffe500] border-4 border-black p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+            <div className="flex items-center justify-between mb-6 border-b-4 border-black pb-4">
+              <h3 className="font-black uppercase text-xl">Daily Missions</h3>
+              <Activity className="w-6 h-6" />
             </div>
             <div className="space-y-4">
-              {missionTasks.map(task => (
-                <div key={task.id} className="flex items-start gap-3 group cursor-pointer">
-                  <div className={`mt-0.5 shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
-                    task.completed 
-                      ? 'bg-success border-success text-success-foreground' 
-                      : 'border-border group-hover:border-primary'
-                  }`}>
-                    {task.completed && <CheckCircle className="w-3 h-3" />}
+              {missionTasks.map((task, i) => (
+                <div key={task.id} className="flex items-start gap-4 p-3 bg-white border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                  <div className={`mt-0.5 shrink-0 w-6 h-6 border-4 border-black flex items-center justify-center ${task.completed ? 'bg-[#23a094]' : 'bg-white'}`}>
+                    {task.completed && <CheckCircle className="w-4 h-4 text-white" />}
                   </div>
-                  <div className={`text-sm font-medium ${task.completed ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
+                  <div className={`font-bold ${task.completed ? 'line-through opacity-50' : ''}`}>
                     {task.label}
                   </div>
                 </div>
@@ -274,38 +248,38 @@ export default async function DashboardHomePage() {
           </div>
 
           {/* OPPORTUNITIES: Active Targets */}
-          <div className="bg-card border border-border/50 rounded-3xl p-6 shadow-sm">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="font-bold text-sm text-muted-foreground uppercase tracking-wider">Opportunities</h3>
-              <Link href="/dashboard/jobs" className="text-xs font-bold text-primary hover:underline">View All</Link>
+          <div className="bg-white border-4 border-black p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+            <div className="flex items-center justify-between mb-6 border-b-4 border-black pb-4">
+              <h3 className="font-black uppercase text-xl">Active Targets</h3>
+              <Link href="/dashboard/jobs" className="text-sm font-black underline decoration-4 decoration-[#90c0ff] hover:text-[#90c0ff]">All</Link>
             </div>
             {recentJobs.length > 0 ? (
               <div className="space-y-4">
                 {recentJobs.map(job => (
-                  <div key={job.id} className="group border border-border/50 rounded-2xl p-4 hover:border-primary/50 transition-colors cursor-pointer">
-                    <div className="font-semibold text-sm mb-1">{job.roleTitle}</div>
-                    <div className="text-xs text-muted-foreground mb-3">{job.company}</div>
-                    <div className="flex items-center gap-2">
-                      <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+                  <div key={job.id} className="border-4 border-black p-4 hover:bg-[#faf8f5] transition-colors cursor-pointer">
+                    <div className="font-black uppercase text-lg mb-1">{job.roleTitle}</div>
+                    <div className="font-bold text-sm mb-4 bg-[#ff90e8] inline-block px-1 border-2 border-black -rotate-1">{job.company}</div>
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1 h-3 bg-white border-2 border-black relative">
                         <div 
-                          className="h-full bg-primary rounded-full"
+                          className="h-full bg-[#90c0ff] border-r-2 border-black"
                           style={{ width: `${job.matchAnalysis?.overallScore ?? 0}%` }}
                         />
                       </div>
-                      <span className="text-xs font-bold w-8 text-right">{job.matchAnalysis?.overallScore ?? 0}%</span>
+                      <span className="font-black text-lg">{job.matchAnalysis?.overallScore ?? 0}%</span>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8">
-                <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">
-                  <Target className="w-6 h-6 text-muted-foreground" />
+              <div className="text-center py-10 bg-[#faf8f5] border-4 border-black border-dashed">
+                <div className="w-16 h-16 bg-[#90c0ff] border-4 border-black rounded-full flex items-center justify-center mx-auto mb-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                  <Target className="w-8 h-8" />
                 </div>
-                <div className="text-sm font-medium">No active targets</div>
-                <div className="text-xs text-muted-foreground mt-1 mb-4">Start tracking a job to see it here</div>
+                <div className="font-black uppercase text-lg">No Targets</div>
+                <div className="font-bold text-sm mt-2 mb-6 px-4">Start tracking a job to see it here</div>
                 <Link href="/dashboard/jobs">
-                  <Button variant="outline" size="sm" className="rounded-xl">
+                  <Button className="rounded-none border-4 border-black bg-white text-black font-black uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
                     Add Target
                   </Button>
                 </Link>
