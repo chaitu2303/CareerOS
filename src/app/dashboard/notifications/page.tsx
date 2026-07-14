@@ -39,7 +39,7 @@ export default async function NotificationsPage() {
       message: 'Your recent technical interview for Frontend Engineer has been scored. You achieved 85%.',
       type: 'INTERVIEW',
       read: false,
-      createdAt: new Date().toISOString()
+      createdAt: '2024-06-01T12:00:00.000Z'
     },
     {
       id: '2',
@@ -47,7 +47,7 @@ export default async function NotificationsPage() {
       message: 'Your resume for the Google Software Engineer role has been successfully tailored and is ready for download.',
       type: 'RESUME',
       read: false,
-      createdAt: new Date(Date.now() - 3600000).toISOString() // 1 hour ago
+      createdAt: '2024-06-01T11:00:00.000Z' // 1 hour ago
     },
     {
       id: '3',
@@ -55,7 +55,7 @@ export default async function NotificationsPage() {
       message: 'We found 5 new jobs that match your Master Profile with >80% accuracy.',
       type: 'JOB',
       read: true,
-      createdAt: new Date(Date.now() - 86400000).toISOString() // 1 day ago
+      createdAt: '2024-05-31T12:00:00.000Z' // 1 day ago
     },
     {
       id: '4',
@@ -63,7 +63,7 @@ export default async function NotificationsPage() {
       message: 'Complete your master profile to unlock personalized AI tools.',
       type: 'SYSTEM',
       read: true,
-      createdAt: new Date(Date.now() - 172800000).toISOString() // 2 days ago
+      createdAt: '2024-05-30T12:00:00.000Z' // 2 days ago
     }
   ];
 

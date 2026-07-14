@@ -2,7 +2,7 @@ const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
 
-const PROD_URL = 'https://careeros-iota.vercel.app';
+const PROD_URL = 'https://careeros-kontlk7nr-ck0815185-2081s-projects.vercel.app';
 
 async function testUpload() {
   const browser = await chromium.launch({ headless: true });
@@ -14,6 +14,7 @@ async function testUpload() {
 
   console.log('1. Registering on PROD...');
   await page.goto(`${PROD_URL}/register`);
+  await page.waitForSelector('#name-input', { state: 'visible', timeout: 60000 });
   await page.fill('#name-input', 'Prod Tester');
   await page.fill('#email-input', email);
   await page.fill('#password-input', password);

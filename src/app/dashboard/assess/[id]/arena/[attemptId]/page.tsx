@@ -41,65 +41,11 @@ export default function AssessmentArenaWorkspace() {
       .catch(console.error);
   }, [params.id]);
 
-  useEffect(() => {
-    if (timeLeft === null || timeLeft <= 0) return;
-    
-    const timer = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev !== null && prev <= 1) {
-          clearInterval(timer);
-          handleSubmit();
-          return 0;
-        }
-        return prev ? prev - 1 : 0;
-      });
-    }, 1000);
-    
-    return () => clearInterval(timer);
-  }, [timeLeft]);
-
-  // Security logging for STRICT mode
-  useEffect(() => {
-    if (modeRef.current !== 'STRICT') return;
-
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        logSecurityEvent('TAB_SWITCH');
-      }
-    };
-    const handleBlur = () => logSecurityEvent('FOCUS_LOSS');
-    const handlePaste = (e: ClipboardEvent) => logSecurityEvent('PASTE');
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('blur', handleBlur);
-    document.addEventListener('paste', handlePaste);
-
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('blur', handleBlur);
-      document.removeEventListener('paste', handlePaste);
-    };
-  }, []);
-
   const [securityEvents, setSecurityEvents] = useState<any[]>([]);
 
   const logSecurityEvent = (type: string) => {
     setSecurityEvents(prev => [...prev, { type, timestamp: new Date().toISOString() }]);
     toast.warning(`Security Alert: ${type.replace('_', ' ')} detected.`);
-  };
-
-  const handleAnswerSelect = (questionId: string, answerId: string) => {
-    setAnswers(prev => ({
-      ...prev,
-      [questionId]: answerId
-    }));
-  };
-
-  const toggleMarkForReview = (questionId: string) => {
-    setMarkedForReview(prev => ({
-      ...prev,
-      [questionId]: !prev[questionId]
-    }));
   };
 
   const saveProgress = async () => {
@@ -154,6 +100,62 @@ export default function AssessmentArenaWorkspace() {
       setSubmitting(false);
     }
   };
+
+  useEffect(() => {
+    if (timeLeft === null || timeLeft <= 0) return;
+    
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev !== null && prev <= 1) {
+          clearInterval(timer);
+          handleSubmit();
+          return 0;
+        }
+        return prev ? prev - 1 : 0;
+      });
+    }, 1000);
+    
+    return () => clearInterval(timer);
+  }, [timeLeft]);
+
+  // Security logging for STRICT mode
+  useEffect(() => {
+    if (modeRef.current !== 'STRICT') return;
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        logSecurityEvent('TAB_SWITCH');
+      }
+    };
+    const handleBlur = () => logSecurityEvent('FOCUS_LOSS');
+    const handlePaste = (e: ClipboardEvent) => logSecurityEvent('PASTE');
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('blur', handleBlur);
+    document.addEventListener('paste', handlePaste);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('blur', handleBlur);
+      document.removeEventListener('paste', handlePaste);
+    };
+  }, []);
+
+
+  const handleAnswerSelect = (questionId: string, answerId: string) => {
+    setAnswers(prev => ({
+      ...prev,
+      [questionId]: answerId
+    }));
+  };
+
+  const toggleMarkForReview = (questionId: string) => {
+    setMarkedForReview(prev => ({
+      ...prev,
+      [questionId]: !prev[questionId]
+    }));
+  };
+
 
   if (loading || !assessment) {
     return <div className="flex h-screen items-center justify-center"><Loader2 className="w-8 h-8 animate-spin" /></div>;
